@@ -1,4 +1,4 @@
-package runTime
+package tables
 
 func GetRunTime() string {
 	return "asd"

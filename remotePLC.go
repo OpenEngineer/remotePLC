@@ -1,6 +1,6 @@
 package main
 
-import "./runTime"
+import "./tables/"
 import "fmt"
 
 var b = a
@@ -13,5 +13,16 @@ func main() {
 	fmt.Println(b)
 	fmt.Println(c)
 	fmt.Println(d)
-	fmt.Println(runTime.GetRunTime())
+	fmt.Println(tables.GetRunTime())
+
+	inputTable := [][]string{
+		[]string{"var1", "ConstantInput", "666.666"},
+		[]string{"var2", "ConstantInput", "669.666"},
+		[]string{"var3", "ZeroInput"},
+	}
+
+	tables.ConstructInputs(inputTable)
+	for _, v := range tables.Inputs {
+		fmt.Println(v.Get())
+	}
 }
