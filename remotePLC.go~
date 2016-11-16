@@ -19,6 +19,7 @@ func main() {
 		[]string{"var1", "ConstantInput", "666.666"},
 		[]string{"var2", "ConstantInput", "669.666"},
 		[]string{"var3", "ZeroInput"},
+		[]string{"var4", "ScaledInput", "2.0", "1.0", "ConstantInput", "2002"},
 	}
 
 	tables.ConstructInputs(inputTable)
