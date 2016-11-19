@@ -1,16 +1,17 @@
 package blocks
 
 type ZeroInput struct {
-	BlockData
+	InputBlockData
 }
 
 func (b *ZeroInput) Update() {
 	b.out = []float64{0.0}
+	b.in = b.out
 }
 
-func ZeroInputConstructor(x []string) Block {
+func ZeroInputConstructor(words []string) Block {
 	b := &ZeroInput{}
 	return b
 }
 
-var ZeroInputOk = AddConstructor("ZeroInput", ZeroInputConstructor)
+var ZeroInputConstructorOk = AddConstructor("ZeroInput", ZeroInputConstructor)

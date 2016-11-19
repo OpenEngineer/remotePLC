@@ -8,15 +8,16 @@ type JoinLine struct {
 
 func (b *JoinLine) Update() {
 	b.in = []float64{}
+
 	for _, v := range b.b0 {
 		b.in = append(b.in, Blocks[v].Get()...)
 	}
-	b.out = b.in
+	Blocks[b.b1].Put(b.in)
 
-	Blocks[b.b1].Put(b.out)
+	b.out = b.in
 }
 
-func ConstructJoinLine(words []string) Block {
+func JoinLineConstructor(words []string) Block {
 	b0 := words[1:]
 	b1 := words[0]
 
@@ -24,4 +25,4 @@ func ConstructJoinLine(words []string) Block {
 	return b
 }
 
-var ConstructJoinLineOk = AddConstructor("JoinLine", ConstructJoinLine)
+var JoinLineConstructorOk = AddConstructor("JoinLine", JoinLineConstructor)

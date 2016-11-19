@@ -3,19 +3,20 @@ package blocks
 import "strconv"
 
 type ConstantInput struct {
-	BlockData
+	InputBlockData
 	constant float64
 }
 
 func (b *ConstantInput) Update() {
 	b.out = []float64{b.constant}
+	b.in = b.out
 }
 
-func ConstructConstantInput(words []string) Block {
+func ConstantInputConstructor(words []string) Block {
 	constant, _ := strconv.ParseFloat(words[0], 64)
 
 	b := &ConstantInput{constant: constant}
 	return b
 }
 
-var ConstantInputOk = AddConstructor("ConstantInput", ConstructConstantInput)
+var ConstantInputConstructorOk = AddConstructor("ConstantInput", ConstantInputConstructor)

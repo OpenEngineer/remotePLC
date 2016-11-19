@@ -1,6 +1,7 @@
 package blocks
 
 import "log"
+import "../logger/"
 
 type Block interface {
 	Get() []float64
@@ -24,6 +25,24 @@ func (b *BlockData) Put(x []float64) {
 	b.in = x
 }
 
+type InputBlockData struct {
+	BlockData
+}
+
+func (b *InputBlockData) Put(x []float64) {
+	b.in = x
+	b.out = x
+}
+
+type OutputBlockData struct {
+	BlockData
+}
+
+func (b *OutputBlockData) Get() []float64 {
+	b.out = b.in
+	return b.out
+}
+
 var Blocks = make(map[string]Block)
 
 var Constructors = make(map[string]func([]string) Block)
@@ -44,6 +63,7 @@ func Construct(x string, y []string) Block {
 }
 
 func ConstructGlobal(key string, words []string) Block {
+	defer logger.WriteEvent("constructed block: ", key, words)
 	b := Construct(words[0], words[1:])
 	Blocks[key] = b
 	return b

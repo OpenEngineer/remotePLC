@@ -4,30 +4,29 @@ import "fmt"
 import "os"
 
 type FileOutput struct {
-	BlockData
+	OutputBlockData
 	file *os.File
 }
 
 func (b *FileOutput) Update() {
-	b.out = b.in
-	b.file.Seek(0, 0)
-	for _, v := range b.out {
+	b.file.Seek(0, 0) // also seeks to 0 when piping stdout or stderr
+	for _, v := range b.in {
 		fmt.Fprintln(b.file, v)
 	}
 }
 
-func ConstructFileOutput(x []string) Block {
+func FileOutputConstructor(words []string) Block {
 	var file *os.File
-	if x[0] == "stdout" {
+	if words[0] == "stdout" {
 		file = os.Stdout
-	} else if x[0] == "stderr" {
+	} else if words[0] == "stderr" {
 		file = os.Stderr
 	} else {
-		file, _ = os.Create(x[0])
+		file, _ = os.Create(words[0])
 	}
 
 	b := &FileOutput{file: file}
 	return b
 }
 
-var ConstructFileOutputOk = AddConstructor("FileOutput", ConstructFileOutput)
+var FileOutputConstructorOk = AddConstructor("FileOutput", FileOutputConstructor)

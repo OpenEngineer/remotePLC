@@ -8,14 +8,15 @@ type ForkLine struct {
 
 func (b *ForkLine) Update() {
 	b.in = Blocks[b.b0].Get()
-	b.out = b.in
 
 	for _, v := range b.b1 {
-		Blocks[v].Put(b.out)
+		Blocks[v].Put(b.in)
 	}
+
+	b.out = b.in
 }
 
-func ConstructForkLine(words []string) Block {
+func ForkLineConstructor(words []string) Block {
 	b0 := words[0]
 	b1 := words[1:]
 
@@ -23,4 +24,4 @@ func ConstructForkLine(words []string) Block {
 	return b
 }
 
-var ConstructForkLineOk = AddConstructor("ForkLine", ConstructForkLine)
+var ForkLineConstructorOk = AddConstructor("ForkLine", ForkLineConstructor)
