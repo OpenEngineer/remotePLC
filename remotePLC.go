@@ -11,15 +11,17 @@ import "./logger/"
 func main() {
 	inputTable := [][]string{
 		[]string{"var1", "ConstantInput", "666.666"},
-		[]string{"var2", "ConstantInput", "669.666"},
+		[]string{"var2", "ConstantInput", "0.5"},
 		[]string{"var3", "ZeroInput"},
 		[]string{"var4", "ScaledInput", "2.0", "1.0", "ConstantInput", "2002"},
+		[]string{"var5", "TimeFileInput", "t0.dat"},
 	}
 	inputs := blocks.ConstructAll(inputTable)
 
 	outputTable := [][]string{
 		[]string{"out1", "FileOutput", "out1.dat"},
-		[]string{"out2", "FileOutput", "out2.dat"},
+		[]string{"out2", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:e4:2c-0b"},
+		[]string{"out3", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:fb:c0-0b"},
 	}
 	outputs := blocks.ConstructAll(outputTable)
 
@@ -29,7 +31,7 @@ func main() {
 	logic := blocks.ConstructAll(logicTable)
 
 	stoppersTable := [][]string{
-		[]string{"time", "TimeStop", "60s"},
+		[]string{"time", "TimeStop", "3m"},
 	}
 	stoppers := blocks.ConstructAll(stoppersTable)
 
@@ -40,7 +42,7 @@ func main() {
 
 	lineTable := [][]string{
 		//[]string{"line1", "RegexpForkLine", "var3", "out[0-9]"},
-		[]string{"line1", "Line", "var2", "out2"},
+		[]string{"line1", "ForkLine", "var5", "out2", "out3"},
 		[]string{"line2", "Line", "node1", "out1"},
 		[]string{"line3", "Line", "var1", "node1"},
 		[]string{"line4", "Line", "var3", "delay1"},
@@ -51,10 +53,13 @@ func main() {
 
 	cycleInputs(inputs, 250, 1)
 
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(5000 * time.Millisecond)
 	for {
 		<-ticker.C
 
+		for _, v := range orderedLines {
+			lines[v].Update()
+		}
 		for _, v := range logic {
 			v.Update()
 		}
@@ -220,18 +225,15 @@ func cycleStoppers(stoppers map[string]blocks.Block) {
 	}
 }
 
-func logData(inputs, outputs, logic map[string]blocks.Block) {
+func logData(dataSets ...map[string]blocks.Block) {
 	fields := []string{}
 	data := [][]float64{}
 
-	for k, v := range inputs {
-		fields = append(fields, k)
-		data = append(data, v.Get())
-	}
-
-	for k, v := range outputs {
-		fields = append(fields, k)
-		data = append(data, v.Get())
+	for _, dataSet := range dataSets {
+		for k, v := range dataSet {
+			fields = append(fields, k)
+			data = append(data, v.Get())
+		}
 	}
 
 	logger.WriteData(fields, data)

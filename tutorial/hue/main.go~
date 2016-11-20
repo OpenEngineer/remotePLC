@@ -1,0 +1,29 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func main() {
+	//locators, _ := hue.DiscoverBridges(true)
+	//locator := locators[0]
+	//deviceType := "christian#hp"
+
+	//bridge, err := locator.CreateUser(deviceType)
+	//if err != nil {
+	//log.Fatal(err)
+	//}
+	uname := "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G"
+	ipaddr := "192.168.1.100"
+
+	// Get all the lights
+	uri := fmt.Sprintf("http://%s/api/%s/lights", ipaddr, uname)
+	resp, err := http.Get(uri)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp.Body)
+}

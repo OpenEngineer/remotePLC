@@ -1,0 +1,10 @@
+--2016-11-20 15:24:30--  http://192.168.1.1:49152/IGDdevicedesc.xml
+Connecting to 192.168.1.1:49152... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 5519 (5,4K) [text/xml]
+Saving to: ‘temp.xml’
+
+     0K .....                                                 100% 9,57M=0,001s
+
+2016-11-20 15:24:30 (9,57 MB/s) - ‘temp.xml’ saved [5519/5519]
+

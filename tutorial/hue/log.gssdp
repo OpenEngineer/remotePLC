@@ -1,0 +1,287 @@
+Using network interface eth2
+Scanning for all resources
+resource available
+  USN:      uuid:a9740eb2-83c1-245a-faf1-4ebfc100bf8c::urn:schemas-wifialliance-org:device:WFADevice:1
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:a9740eb2-83c1-245a-faf1-4ebfc100bf8c
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:a9740eb2-83c1-245a-faf1-4ebfc100bf8c::upnp:rootdevice
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:a9740eb2-83c1-245a-faf1-4ebfc100bf8c::urn:schemas-wifialliance-org:service:WFAWLANConfig:1
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:device:ZonePlayer:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::upnp:rootdevice
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MS
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MS::urn:schemas-upnp-org:device:MediaServer:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-upnp-org:device:MediaRenderer:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:AlarmClock:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:MusicServices:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:AudioIn:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:DeviceProperties:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:SystemProperties:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:ZoneGroupTopology:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-upnp-org:service:GroupManagement:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400::urn:schemas-tencent-com:service:QPlay:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MS::urn:schemas-upnp-org:service:ContentDirectory:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MS::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-upnp-org:service:RenderingControl:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-upnp-org:service:AVTransport:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-sonos-com:service:Queue:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E5829265601400_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1
+  Location: http://192.168.1.144:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:device:ZonePlayer:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::upnp:rootdevice
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MS
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MS::urn:schemas-upnp-org:device:MediaServer:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-upnp-org:device:MediaRenderer:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:AlarmClock:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:MusicServices:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:AudioIn:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:DeviceProperties:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:SystemProperties:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:ZoneGroupTopology:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-upnp-org:service:GroupManagement:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400::urn:schemas-tencent-com:service:QPlay:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MS::urn:schemas-upnp-org:service:ContentDirectory:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MS::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::urn:schemas-upnp-org:device:ZonePlayer:1
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-upnp-org:service:RenderingControl:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::upnp:rootdevice
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-upnp-org:service:AVTransport:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-sonos-com:service:Queue:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585A775601400_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1
+  Location: http://192.168.1.141:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::urn:schemas-upnp-org:service:DeviceProperties:1
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::urn:schemas-upnp-org:service:SystemProperties:1
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::urn:schemas-upnp-org:service:ZoneGroupTopology:1
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E58E0448801400::urn:schemas-upnp-org:service:GroupManagement:1
+  Location: http://192.168.1.126:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:device:ZonePlayer:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::upnp:rootdevice
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MS
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MS::urn:schemas-upnp-org:device:MediaServer:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-upnp-org:device:MediaRenderer:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:AlarmClock:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:MusicServices:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:AudioIn:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:DeviceProperties:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:SystemProperties:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:ZoneGroupTopology:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-upnp-org:service:GroupManagement:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400::urn:schemas-tencent-com:service:QPlay:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MS::urn:schemas-upnp-org:service:ContentDirectory:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MS::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-upnp-org:service:RenderingControl:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-upnp-org:service:AVTransport:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-sonos-com:service:Queue:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:RINCON_000E585B2A6C01400_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1
+  Location: http://192.168.1.116:1400/xml/device_description.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a90f-48f8b3ebf2c4::upnp:rootdevice
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a90f-48f8b3ebf2c4
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:0011320a-1700-0011-0017-00170a321100::upnp:rootdevice
+  Location: http://192.168.1.148:50001/desc/device.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a90f-48f8b3ebf2c4::urn:schemas-upnp-org:device:InternetGatewayDevice:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a90f-48f8b3ebf2c4::urn:schemas-upnp-org:service:Layer3Forwarding:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:2f402f80-da50-11e1-9b23-00178828d38a::upnp:rootdevice
+  Location: http://192.168.1.100:80/description.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a91f-48f8b3ebf2c4
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a91f-48f8b3ebf2c4::urn:schemas-upnp-org:device:WANDevice:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a91f-48f8b3ebf2c4::urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a92f-48f8b3ebf2c4
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a92f-48f8b3ebf2c4::urn:schemas-upnp-org:device:WANConnectionDevice:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a92f-48f8b3ebf2c4::urn:schemas-upnp-org:service:WANPPPConnection:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a92f-48f8b3ebf2c4::urn:schemas-upnp-org:service:WANIPConnection:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a92f-48f8b3ebf2c4::urn:schemas-upnp-org:service:WANEthernetLinkConfig:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a93f-48f8b3ebf2c4
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a93f-48f8b3ebf2c4::urn:schemas-upnp-org:device:LANDevice:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:ebf5a0a0-1dd1-11b2-a93f-48f8b3ebf2c4::urn:schemas-upnp-org:service:LANHostConfigManagement:1
+  Location: http://192.168.1.1:49152/IGDdevicedesc.xml
+resource available
+  USN:      uuid:2f402f80-da50-11e1-9b23-00178828d38a
+  Location: http://192.168.1.100:80/description.xml
