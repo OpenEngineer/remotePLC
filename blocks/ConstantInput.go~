@@ -1,21 +1,32 @@
 package blocks
 
-import "strconv"
+import (
+	"log"
+	"strconv"
+)
 
 type ConstantInput struct {
 	InputBlockData
-	constant float64
+	constants []float64
 }
 
 func (b *ConstantInput) Update() {
-	b.out = []float64{b.constant}
+	b.out = b.constants
 	b.in = b.out
 }
 
 func ConstantInputConstructor(words []string) Block {
-	constant, _ := strconv.ParseFloat(words[0], 64)
+	constants := []float64{}
+	for _, word := range words {
+		constant, err := strconv.ParseFloat(word, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	b := &ConstantInput{constant: constant}
+		constants = append(constants, constant)
+	}
+
+	b := &ConstantInput{constants: constants}
 	return b
 }
 

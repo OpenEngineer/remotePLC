@@ -1,7 +1,10 @@
 package blocks
 
 import (
+	"../logger/"
 	"bufio"
+	"errors"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -10,8 +13,8 @@ import (
 
 type TimeFileInput struct {
 	InputBlockData
+	fname   string
 	file    *os.File // usefull for seeking
-	scanner *bufio.Scanner
 	modTime time.Time
 	start   time.Time
 	tInterp []float64
@@ -36,33 +39,71 @@ func checkMonotonicity(tInterp []float64) bool {
 }
 
 // Example of runtime file modification
-func (b *TimeFileInput) readFile() {
+func (b *TimeFileInput) readFile() error {
+	if b.file == nil {
+		return errors.New("error: TimeFile nil")
+	}
 	b.file.Seek(0, 0) // also seeks to 0 when piping stdin
+
+	scanner := bufio.NewScanner(b.file) // use default Split: ScanLines
+
+	logger.WriteEvent("reading TimeFileInput file ", b.fname)
 
 	tInterpNew := []float64{}
 	xInterpNew := [][]float64{}
-	for b.scanner.Scan() {
-		tokens := strings.Split(b.scanner.Text(), " ")
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		words := strings.Fields(line)
 
 		// parse the time
-		tInterp, _ := strconv.ParseFloat(tokens[0], 64)
+		tInterp, _ := strconv.ParseFloat(words[0], 64)
 		tInterpNew = append(tInterpNew, tInterp)
 
 		// parse the values
 		xInterp := []float64{}
-		for _, token := range tokens[1:] {
-			x, _ := strconv.ParseFloat(token, 64)
+		for _, word := range words[1:] {
+			x, _ := strconv.ParseFloat(word, 64)
 			xInterp = append(xInterp, x)
 		}
 		xInterpNew = append(xInterpNew, xInterp)
 	}
 
-	if checkMonotonicity(tInterpNew) {
+	// change the block only if the values are monotone
+	if len(tInterpNew) == 0 {
+		return errors.New("file NOK")
+	} else if checkMonotonicity(tInterpNew) {
 		b.tInterp = tInterpNew
 		b.xInterp = xInterpNew
 		info, _ := b.file.Stat()
 		b.modTime = info.ModTime()
 	} else {
+		return errors.New("warning: invalid TimeFileInput, ignoring")
+	}
+
+	return nil
+}
+
+func (b *TimeFileInput) refreshFile() {
+	// reread the time file
+	var openErr error
+	b.file, openErr = reopenFile(b.fname, b.file)
+	if openErr != nil {
+		logger.WriteEvent("warning ignoring timefile ", b.fname, ", ", openErr)
+		return
+	}
+
+	info, statErr := b.file.Stat()
+	if statErr != nil {
+		logger.WriteEvent("warning ignoring timefile ", b.fname, ", ", statErr)
+		return
+	}
+
+	if !b.modTime.Equal(info.ModTime()) {
+		readErr := b.readFile()
+		if readErr != nil {
+			logger.WriteEvent("warning ignoring timefile ", readErr)
+		}
 	}
 }
 
@@ -95,11 +136,7 @@ func (b *TimeFileInput) findInterpSlice() (int, int, float64) {
 }
 
 func (b *TimeFileInput) Update() {
-	// reread the time file if it has been modified
-	info, _ := b.file.Stat()
-	if !b.modTime.Equal(info.ModTime()) {
-		b.readFile()
-	}
+	b.refreshFile()
 
 	// find the time index
 	iLower, iUpper, alpha := b.findInterpSlice()
@@ -123,19 +160,38 @@ func (b *TimeFileInput) Update() {
 	b.in = b.out
 }
 
-func TimeFileInputConstructor(words []string) Block {
-	var file *os.File
-	if words[0] == "stdin" {
-		file = os.Stdin
-	} else {
-		file, _ = os.Open(words[0])
+func reopenFile(fname string, file *os.File) (*os.File, error) {
+	var err error
+
+	if file != nil {
+		file.Close()
 	}
 
-	scanner := bufio.NewScanner(file) // use default Split: ScanLines
-	start := time.Now()
-	b := &TimeFileInput{file: file, scanner: scanner, start: start}
+	if fname == "stdin" {
+		file = os.Stdin
+		err = nil
+	} else {
+		file, err = os.Open(fname)
+	}
 
-	b.readFile()
+	return file, err
+}
+
+func TimeFileInputConstructor(words []string) Block {
+	var file *os.File
+	fname := words[0]
+	var err error
+	file, err = reopenFile(fname, file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b := &TimeFileInput{fname: fname, file: file, start: time.Now()}
+
+	readErr := b.readFile()
+	if readErr != nil {
+		log.Fatal("error in TimeFileInputConstructor: ", fname, " not in valid format")
+	}
 
 	return b
 }

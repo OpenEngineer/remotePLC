@@ -1,8 +1,0 @@
-http://192.168.1.100:80/description.xml
-http://192.168.1.116:1400/xml/device_description.xml
-http://192.168.1.1:1990/WFADevice.xml
-http://192.168.1.126:1400/xml/device_description.xml
-http://192.168.1.141:1400/xml/device_description.xml
-http://192.168.1.144:1400/xml/device_description.xml
-http://192.168.1.148:50001/desc/device.xml
-http://192.168.1.1:49152/IGDdevicedesc.xml

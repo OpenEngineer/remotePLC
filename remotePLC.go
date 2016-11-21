@@ -14,14 +14,17 @@ func main() {
 		[]string{"var2", "ConstantInput", "0.5"},
 		[]string{"var3", "ZeroInput"},
 		[]string{"var4", "ScaledInput", "2.0", "1.0", "ConstantInput", "2002"},
-		[]string{"var5", "TimeFileInput", "t0.dat"},
+		[]string{"var5", "TimeFileInput", "t1.dat"},
+		[]string{"var6", "TimeFileInput", "t0.dat"},
 	}
 	inputs := blocks.ConstructAll(inputTable)
 
 	outputTable := [][]string{
 		[]string{"out1", "FileOutput", "out1.dat"},
-		[]string{"out2", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:e4:2c-0b"},
-		[]string{"out3", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:fb:c0-0b"},
+		[]string{"out2", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "2"},
+		[]string{"out3", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "3"},
+		[]string{"out4", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "1"},
+		//[]string{"out3", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:fb:c0-0b"},
 	}
 	outputs := blocks.ConstructAll(outputTable)
 
@@ -46,14 +49,17 @@ func main() {
 		[]string{"line2", "Line", "node1", "out1"},
 		[]string{"line3", "Line", "var1", "node1"},
 		[]string{"line4", "Line", "var3", "delay1"},
+		[]string{"line5", "Line", "var6", "out4"},
 	}
 	lines := blocks.ConstructAll(lineTable)
 	orderedLines := orderLines(lines, inputs, logic)               // outputs and terminators are not needed for this
 	checkConnectivity(inputs, outputs, logic, lines, orderedLines) // all outputs and all logic must be connected
 
-	cycleInputs(inputs, 250, 1)
+	dataLogger := logger.MakeDataLogger()
 
-	ticker := time.NewTicker(5000 * time.Millisecond)
+	cycleInputs(inputs, 50, 1)
+
+	ticker := time.NewTicker(250 * time.Millisecond)
 	for {
 		<-ticker.C
 
@@ -69,7 +75,7 @@ func main() {
 
 		cycleOutputs(outputs)
 
-		logData(inputs, outputs, logic)
+		logData(dataLogger, inputs, outputs, logic)
 
 		cycleStoppers(stoppers)
 	}
@@ -225,7 +231,7 @@ func cycleStoppers(stoppers map[string]blocks.Block) {
 	}
 }
 
-func logData(dataSets ...map[string]blocks.Block) {
+func logData(dataLogger *logger.DataLogger, dataSets ...map[string]blocks.Block) {
 	fields := []string{}
 	data := [][]float64{}
 
@@ -236,5 +242,5 @@ func logData(dataSets ...map[string]blocks.Block) {
 		}
 	}
 
-	logger.WriteData(fields, data)
+	dataLogger.WriteData(fields, data)
 }
