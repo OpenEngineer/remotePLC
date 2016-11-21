@@ -21,9 +21,9 @@ func main() {
 
 	outputTable := [][]string{
 		[]string{"out1", "FileOutput", "out1.dat"},
-		[]string{"out2", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "2"},
-		[]string{"out3", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "3"},
-		[]string{"out4", "PhilipsHueBridgeOutput", "192.168.1.6", "7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA", "1"},
+		[]string{"out2", "PhilipsHueBridgeOutput", "192.168.1.6", "xxxx", "2"},
+		[]string{"out3", "PhilipsHueBridgeOutput", "192.168.1.6", "xxxx", "3"},
+		[]string{"out4", "PhilipsHueBridgeOutput", "192.168.1.6", "xxxx", "1"},
 		//[]string{"out3", "PhilipsHueOutput", "192.168.1.100", "gawdlP-23CzKxbGc6IkNJdwNNSCTCI40y2RbBc-G", "00:17:88:01:10:36:fb:c0-0b"},
 	}
 	outputs := blocks.ConstructAll(outputTable)

@@ -29,9 +29,18 @@ func getHttpJson(uri string) (data map[string]interface{}, err error) {
 		err = readError
 	}
 
-	jsonError := json.Unmarshal(raw, &data)
+	var rawJson interface{}
+	jsonError := json.Unmarshal(raw, &rawJson)
 	if err == nil {
 		err = jsonError
+	}
+
+	// depending on the type return a different json
+	switch rawJson.(type) {
+	case map[string]interface{}:
+		data = rawJson.(map[string]interface{})
+	case []interface{}:
+		data = rawJson.([]interface{})[0].(map[string]interface{})
 	}
 
 	return
@@ -179,7 +188,11 @@ func PhilipsHueBridgeOutputConstructor(words []string) Block {
 	// get the list of lights
 	states, getErr := getHttpJson(uriGet)
 	if getErr != nil {
-		log.Fatal("in PhilipsHueBridgeOutputConstructior(), ", getErr)
+		log.Fatal("in PhilipsHueBridgeOutputConstructior(), failed to get states. Could be bad url. ", getErr)
+	}
+
+	if _, isError := states["error"]; isError {
+		log.Fatal("api error: ", states["error"].(map[string]interface{})["description"])
 	}
 
 	// check that the lightNo exists

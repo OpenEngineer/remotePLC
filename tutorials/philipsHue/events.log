@@ -1,21 +1,9 @@
-2016/11/22 00:00:44 constructed block: var1[ConstantInput 666.666]
-2016/11/22 00:00:44 constructed block: var2[ConstantInput 0.5]
-2016/11/22 00:00:44 constructed block: var3[ZeroInput]
-2016/11/22 00:00:44 constructed block: var4[ScaledInput 2.0 1.0 ConstantInput 2002]
-2016/11/22 00:00:44 reading TimeFileInput file t1.dat
-2016/11/22 00:00:44 constructed block: var5[TimeFileInput t1.dat]
-2016/11/22 00:00:44 reading TimeFileInput file t0.dat
-2016/11/22 00:00:44 constructed block: var6[TimeFileInput t0.dat]
-2016/11/22 00:00:44 constructed block: out1[FileOutput out1.dat]
-2016/11/22 00:00:44 constructed block: out2[PhilipsHueBridgeOutput 192.168.1.6 7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA 2]
-2016/11/22 00:00:44 constructed block: out3[PhilipsHueBridgeOutput 192.168.1.6 7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA 3]
-2016/11/22 00:00:44 constructed block: out4[PhilipsHueBridgeOutput 192.168.1.6 7mRkE0WShaySGxnfL2jQDdMYMXvBAsgtf1n847iA 1]
-2016/11/22 00:00:44 constructed block: delay1[DelayLogic]
-2016/11/22 00:00:44 constructed block: time[TimeStop 3m]
-2016/11/22 00:00:44 constructed block: node1[Node]
-2016/11/22 00:00:44 constructed block: line1[ForkLine var5 out2 out3]
-2016/11/22 00:00:44 constructed block: line2[Line node1 out1]
-2016/11/22 00:00:44 constructed block: line3[Line var1 node1]
-2016/11/22 00:00:44 constructed block: line4[Line var3 delay1]
-2016/11/22 00:00:44 constructed block: line5[Line var6 out4]
-2016/11/22 00:00:46 summarized "2016-11-21_23h47m42.log":
+2016/11/22 00:24:34 constructed block: var1[ConstantInput 666.666]
+2016/11/22 00:24:34 constructed block: var2[ConstantInput 0.5]
+2016/11/22 00:24:34 constructed block: var3[ZeroInput]
+2016/11/22 00:24:34 constructed block: var4[ScaledInput 2.0 1.0 ConstantInput 2002]
+2016/11/22 00:24:34 reading TimeFileInput file t1.dat
+2016/11/22 00:24:34 constructed block: var5[TimeFileInput t1.dat]
+2016/11/22 00:24:34 reading TimeFileInput file t0.dat
+2016/11/22 00:24:34 constructed block: var6[TimeFileInput t0.dat]
+2016/11/22 00:24:34 constructed block: out1[FileOutput out1.dat]
