@@ -29,6 +29,8 @@ func LineConstructor(words []string) Block {
 	b0 := []string{}
 	b1 := []string{}
 	for i := 0; i < len(words); i += 2 {
+		assertBlock(words[i])
+		assertBlock(words[i+1])
 		b0 = append(b0, words[i])
 		b1 = append(b1, words[i+1])
 	}

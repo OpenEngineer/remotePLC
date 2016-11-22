@@ -46,3 +46,6 @@ echo "Your username: $username"
 
 echo "Getting the lights..."
 wget http://${bridgeIp}/api/$username/lights -o log.wget2 -O log.lights
+
+echo "Writing 1 light to outputs.cfg..."
+echo "out1 PhilipsHueBridgeOutput $bridgeIp $username 1" > outputs.cfg

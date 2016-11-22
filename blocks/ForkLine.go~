@@ -20,6 +20,10 @@ func ForkLineConstructor(words []string) Block {
 	b0 := words[0]
 	b1 := words[1:]
 
+	assertBlock(b0)
+	for _, v := range b1 {
+		assertBlock(v)
+	}
 	b := &ForkLine{b0: b0, b1: b1}
 	return b
 }

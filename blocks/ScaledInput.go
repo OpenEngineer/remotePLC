@@ -1,6 +1,9 @@
 package blocks
 
-import "strconv"
+import (
+	"log"
+	"strconv"
+)
 
 type ScaledInput struct {
 	InputBlockData
@@ -11,9 +14,13 @@ type ScaledInput struct {
 
 func (b *ScaledInput) Update() {
 	b.child.Update()
-	b.out = b.child.Get() // To make sure that they are the same size
+	in := b.child.Get() // To make sure that they are the same size
 
-	for i, v := range b.out {
+	if len(b.out) != len(in) {
+		b.out = make([]float64, len(in))
+	}
+
+	for i, v := range in {
 		b.out[i] = b.scale*v + b.offset
 	}
 
@@ -21,8 +28,16 @@ func (b *ScaledInput) Update() {
 }
 
 func ScaledInputConstructor(words []string) Block {
-	scale, _ := strconv.ParseFloat(words[0], 64)
-	offset, _ := strconv.ParseFloat(words[1], 64)
+	scale, errScale := strconv.ParseFloat(words[0], 64)
+	if errScale != nil {
+		log.Fatal("in ScaledInputConstructor(), ", errScale)
+	}
+
+	offset, errOffset := strconv.ParseFloat(words[1], 64)
+	if errOffset != nil {
+		log.Fatal("in ScaledInputConstructor(), ", errOffset)
+	}
+
 	child := Construct(words[2], words[3:])
 
 	b := &ScaledInput{scale: scale, offset: offset, child: child}

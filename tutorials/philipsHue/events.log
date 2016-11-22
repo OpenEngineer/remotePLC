@@ -1,9 +1,0 @@
-2016/11/22 00:24:34 constructed block: var1[ConstantInput 666.666]
-2016/11/22 00:24:34 constructed block: var2[ConstantInput 0.5]
-2016/11/22 00:24:34 constructed block: var3[ZeroInput]
-2016/11/22 00:24:34 constructed block: var4[ScaledInput 2.0 1.0 ConstantInput 2002]
-2016/11/22 00:24:34 reading TimeFileInput file t1.dat
-2016/11/22 00:24:34 constructed block: var5[TimeFileInput t1.dat]
-2016/11/22 00:24:34 reading TimeFileInput file t0.dat
-2016/11/22 00:24:34 constructed block: var6[TimeFileInput t0.dat]
-2016/11/22 00:24:34 constructed block: out1[FileOutput out1.dat]

@@ -1,7 +1,9 @@
 package blocks
 
-import "log"
-import "../logger/"
+import (
+	"../logger/"
+	"log"
+)
 
 type Block interface {
 	Get() []float64
@@ -44,6 +46,12 @@ func (b *OutputBlockData) Get() []float64 {
 }
 
 var Blocks = make(map[string]Block)
+
+func assertBlock(k string) {
+	if _, ok := Blocks[k]; !ok {
+		log.Fatal("couldn't find block ", k)
+	}
+}
 
 var Constructors = make(map[string]func([]string) Block)
 

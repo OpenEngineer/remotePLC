@@ -1,0 +1,89 @@
+Using network interface wlan2
+Scanning for all resources
+resource available
+  USN:      uuid:7076436f-6e65-1063-8074-000000000001
+  Location: http://192.168.1.1:9000/DeviceDescription.xml
+resource available
+  USN:      uuid:d4d03895-967b-91c9-f23e-85bc8f31d3ab::urn:schemas-wifialliance-org:device:WFADevice:1
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:d4d03895-967b-91c9-f23e-85bc8f31d3ab
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:d4d03895-967b-91c9-f23e-85bc8f31d3ab::upnp:rootdevice
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:d4d03895-967b-91c9-f23e-85bc8f31d3ab::urn:schemas-wifialliance-org:service:WFAWLANConfig:1
+  Location: http://192.168.1.1:1990/WFADevice.xml
+resource available
+  USN:      uuid:7076436f-6e65-1063-8074-000000000001::upnp:rootdevice
+  Location: http://192.168.1.1:9000/DeviceDescription.xml
+resource available
+  USN:      uuid:7076436f-6e65-1063-8074-000000000001::urn:schemas-upnp-org:device:MediaServer:1
+  Location: http://192.168.1.1:9000/DeviceDescription.xml
+resource available
+  USN:      uuid:7076436f-6e65-1063-8074-000000000001::urn:schemas-upnp-org:service:ContentDirectory:1
+  Location: http://192.168.1.1:9000/DeviceDescription.xml
+resource available
+  USN:      uuid:7076436f-6e65-1063-8074-000000000001::urn:schemas-upnp-org:service:ConnectionManager:1
+  Location: http://192.168.1.1:9000/DeviceDescription.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13e::upnp:rootdevice
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13e
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13e::urn:schemas-upnp-org:device:InternetGatewayDevice:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13e::urn:schemas-upnp-org:service:Layer3Forwarding:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13f
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13f::urn:schemas-upnp-org:device:WANDevice:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce13f::urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce140
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce140::urn:schemas-upnp-org:device:WANConnectionDevice:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce140::urn:schemas-upnp-org:service:WANPPPConnection:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce141
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce141::urn:schemas-upnp-org:device:WANConnectionDevice:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:75802409-bccb-40e7-8e6c-fa095ecce141::urn:schemas-upnp-org:service:WANIPConnection:1
+  Location: http://192.168.1.1:49153/6a477a53/gatedesc1b.xml
+resource available
+  USN:      uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89::urn:dmc-samsung-com:service:SyncManager:1
+  Location: http://192.168.1.9:2869/upnphost/udhisapi.dll?content=uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89
+resource available
+  USN:      uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89::upnp:rootdevice
+  Location: http://192.168.1.9:2869/upnphost/udhisapi.dll?content=uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89
+resource available
+  USN:      [fe80::985a:9fe4:e54f:588f]:3540
+  Location: 192.168.1.7
+resource available
+  USN:      uuid:2f402f80-da50-11e1-9b23-001788173092::upnp:rootdevice
+  Location: http://192.168.1.6:80/description.xml
+resource available
+  USN:      uuid:2f402f80-da50-11e1-9b23-001788173092
+  Location: http://192.168.1.6:80/description.xml
+resource available
+  USN:      uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89::urn:dmc-samsung-com:device:SyncServer:1
+  Location: http://192.168.1.9:2869/upnphost/udhisapi.dll?content=uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89
+resource available
+  USN:      uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89
+  Location: http://192.168.1.9:2869/upnphost/udhisapi.dll?content=uuid:804e0898-9c3c-4195-be95-ebeed4cb2f89

@@ -7,7 +7,7 @@ grep "Location:" log.gssdp | grep "http" | awk '{print $2}' | sort | uniq > log.
 # loop the locations, wget the file into a temp file
 while read l
 do
-  wget $l -O temp.xml -o log.wget0 -T 3 -t 2
+  wget $l -O temp.xml -o log.wget0 -T 1 -t 2
 
   # if this file contains any reference to Philips hue, then report the ip address
   isHue=`grep -e "<friendlyName>Philips hue" temp.xml | sed 's/.*(\(.*\)).*/\1/'`
@@ -46,3 +46,6 @@ echo "Your username: $username"
 
 echo "Getting the lights..."
 wget http://${bridgeIp}/api/$username/lights -o log.wget2 -O log.lights
+
+echo "Writing 1 light to outputs.cfg..."
+echo "out1 $bridgeIp $username 1" > outputs.cfg
