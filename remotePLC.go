@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+  logger.EventMode = logger.FATAL
 	inputTable, outputTable, logicTable, stoppersTable, lineTable := readInput()
 
 	inputs := blocks.ConstructAll(inputTable)
@@ -20,6 +21,7 @@ func main() {
 	lines := blocks.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
+  logger.EventMode = logger.WARNING
 	controlLoop(inputs, outputs, logic, stoppers, lines)
 }
 

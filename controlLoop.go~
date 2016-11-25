@@ -10,6 +10,7 @@ import (
 
 func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block) {
 	// Preprocessing step, make the orderedLines map
+  logger.EventMode = WARNING
 	orderedLines := orderLines(lines, inputs, logic) // outputs and terminators are not needed for this
 
 	checkConnectivity(inputs, outputs, logic, lines, orderedLines) // all outputs and all logic must be connected
@@ -18,10 +19,10 @@ func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block
 	dataLogger := logger.MakeDataLogger()
 
 	// Cycle the input updates in the background
-	cycleInputs(inputs, 50, 1)
+	cycleInputs(inputs, 250, 1)
 
 	// Main loop
-	ticker := time.NewTicker(250 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		<-ticker.C
 
