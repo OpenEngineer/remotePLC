@@ -1,8 +1,8 @@
-tutorials/philipsHue/log.username
-tutorials/philipsHue/log.usernameError
-tutorials/philipsHue/log.lights
-tutorials/philipsHue/log.location
-tutorials/philipsHue/log.wget0
-tutorials/philipsHue/log.wget1
-tutorials/philipsHue/log.wget2
-tutorials/philipsHue/log.gssdp
+<<<<<<< HEAD
+log.*
+*.log
+=======
+tutorials/philipsHue/log.*
+mk5*
+Mk5*
+>>>>>>> 6abe64bddd2b969d4143e1a04005ae2b209f55d0

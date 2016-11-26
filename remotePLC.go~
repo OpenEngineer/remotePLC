@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+  logger.EventMode = logger.FATAL
+
 	inputTable, outputTable, logicTable, stoppersTable, lineTable := readInput()
 
 	inputs := blocks.ConstructAll(inputTable)

@@ -3,6 +3,7 @@ package blocks
 import (
 	"../logger/"
 	"log"
+  //"net"
 )
 
 type Block interface {
@@ -84,3 +85,8 @@ func ConstructAll(wordsTable [][]string) map[string]Block {
 	}
 	return m
 }
+
+// a list of open client-server connections, so that they can be reused between the blocks
+// the key is: "net:ip:port"
+// TODO: really necessary? better to use global conn vars in relevant block types?
+//var connections = make(map[string]net.Conn)

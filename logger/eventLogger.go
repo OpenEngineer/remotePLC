@@ -3,6 +3,16 @@ package logger
 import "log"
 import "os"
 
+type EventModeType int
+
+const (
+  QUIET EventModeType = iota
+  WARNING
+  FATAL
+)
+
+var EventMode EventModeType = WARNING
+
 func createEventLogger() *log.Logger {
 	fname := "events.log"
 	file, err := os.Create(fname)
@@ -15,8 +25,33 @@ func createEventLogger() *log.Logger {
 	return logger
 }
 
-var events *log.Logger = createEventLogger()
+var events *log.Logger
 
 func WriteEvent(s ...interface{}) {
-	events.Print(s...)
+  if EventMode != QUIET {
+    if events == nil {
+      events = createEventLogger()
+    }
+
+    events.Print(s...)
+  }
+}
+
+func WriteError(context string, err error) {
+  if EventMode != QUIET && err != nil {
+    if events == nil {
+      events = createEventLogger()
+    }
+
+    if EventMode == WARNING {
+      events.Print(context, err)
+    } else if EventMode == FATAL {
+      // quit the program
+      log.Fatal(context, err)
+      os.Exit(1) // TODO: better error codes?
+    } else {
+      // TODO: make redundant by using fixed set commands for EventMode
+      log.Fatal("event mode not recognized")
+    }
+  }
 }
