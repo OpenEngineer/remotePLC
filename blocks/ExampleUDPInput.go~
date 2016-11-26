@@ -1,100 +1,101 @@
 package blocks
 
 import (
-  "../logger/"
-  "fmt"
-  "net"
-  "log"
-  "strings"
-  "strconv"
+	"../logger/"
+	"fmt"
+	"log"
+	"net"
+	"strconv"
+	"strings"
 )
 
-// see ExampleUDP.go for protocol details (like the data structure)
+// see ExampleUDP.go for protocol details (data structure, helper functions etc)
 
 type ExampleUDPInput struct {
-  InputBlockData
-  questionBytes []byte 
-
-  converter func([4]byte)float64 // for the carried data
-
-  conn net.Conn
+	InputBlockData
+	questionBytes []byte
+	dataConv      func([EXAMPLEUDP_DATA_SIZE]byte) float64 // for the carried data
+	conn          net.Conn                                 // local copy of exampleUDPConnection
 }
 
 func (b *ExampleUDPInput) Update() {
-  nwrite, errWrite := b.conn.Write(b.question)
-  if nwrite <= 0 || errWrite != nil {
-    log.Fatal("failed to writeto, ", errWrite)
-  }
+	// send the question message
+	_, errWrite := b.conn.Write(b.questionBytes)
+	logger.WriteError("ExampleUDPInput.Update()", errWrite)
 
-  answerBytes := make([]byte, 1460) // max length of a udp packet
-  nread, err := b.conn.Read(answerBytes)
+	// receive the answer message
+	answerBytes := make([]byte, EXAMPLEUDP_MAX_BYTES) // max length of a udp packet
+	_, errRead := b.conn.Read(answerBytes)
+	logger.WriteError("ExampleUDPInput.Update()", errRead)
 
-  if err != nil || nread <= 0 {
-    logger.WriteEvent("warning: problem getting udp packet")
-  }
+	// now parse the answer message
+	answer := exampleUDPBytesToPacket(answerBytes)
 
-  // now parse the records
-  answer := exampleUDPBytesToPacket(answerBytes)
+	if answer.Header.ErrorCode != 0 {
+		logger.WriteError("ExampleUDPInput.Update()",
+			errors.New("protocol error "+strconv.Itoa(answer.Header.ErrorCode)))
+	} else if errWrite == nil && errRead == nil {
+		// Get the number of records and populate b.out
+		numRecords := int(answer.Header.NumRecords)
+		if len(b.out) != numRecords {
+			b.out = make([]float64, numRecords)
+		}
 
-  // Get the number of records and populate b.out
-  nRecords := int(answer.Header2.Uint1)
-  if len(b.out) != nRecords {
-    b.out = make([]float64, nRecords)
-  }
+		for i := 0; i < numRecords; i++ {
+			b.out[i] = b.dataConv(answer.Records[i].Data)
+		}
 
-  // TODO: status warning
-  for i := 0; i < nRecords; i++ {
-    b.out[i] = b.converter(answer.Reconrds[i].Data)
-  }
-
-  b.in = b.out
-  return
+		b.in = b.out
+	}
+	return
 }
 
 func ExampleUDPInputConstructor(words []string) Block {
-  ipaddr := words[0]
-  converterType := words[1]
-  recordWords := words[2:]
+	ipaddr := words[0]
+	dataConvType := words[1]
+	recordIds := words[2:]
 
-  question := ExampleUDPPacket{
-    Header1: ExampleUDPHeader1{
-      Byte1: 0xab,
-    },
-    Header2: ExampleUDPHeader2{
-      Uint2: 1, 
-    },
-  }
+	question := ExampleUDPPacket{
+		Header: ExampleUDPHeader{
+			Version:    EXAMPLEUDP_VERSION,
+			SubVersion: EXAMPLEUDP_SUBVERSION,
+			SeqNo:      uint16(1), // TODO: management of SeqNo
+		},
+	}
 
-  // store all the sdo's
-  nRecords := len(recordWords)
-  if nRecords == 0 {
-    log.Fatal("must specify at least one record")
-  } else if nRecords > 180 {
-    log.Fatal("too many records specified")
-  }
+	// get the number of records, and check validity
+	numRecords := len(recordIds)
+	if numRecords == 0 {
+		logger.WriteError("ExampleUDPInputConstructor()",
+			errors.New("need at least one record"))
+	} else if numRecords > EXAMPLEUDP_MAX_RECORDS {
+		logger.WriteError("ExampleUDPInputConstructor()",
+			errors.New("too many records specified"))
+	}
 
-  question.Header1.Uint1 = uint16(nRecords)
-  for i, w := range recordWords {
-    id, errId := strconv.ParseUint(w, 0, 16)
-    logger.WriteError("ExampleUDPInputConstructor()", errId)
+	// store all the records
+	question.Header.NumRecords = uint16(numRecords)
+	for i, idStr := range recordIds {
+		id, errId := strconv.ParseUint(idStr, 0, 16)
+		logger.WriteError("ExampleUDPInputConstructor()", errId)
 
-    question.Records[i] = ExampleUDPRecord{
-      Uint2: uint16(id),
-    }
-  }
+		question.Records[i] = ExampleUDPRecord{
+			Id: uint16(id),
+		}
+	}
 
-  // convert the msg into a []byte
-  questionBytes := exampleUDPPacketToBytes(question)
+	// convert the message into a []byte
+	questionBytes := exampleUDPPacketToBytes(question)
 
-  assertExampleUDPConnection(ipaddr)
+	assertExampleUDPConnection(ipaddr)
 
-  b := &ExampleUDPInput{
-    questionBytes: questionBytes,
-    conn: exampleUDPConnection, 
-    converter: ExampleUDPBytesToFloat[converterType],
-  }
+	b := &ExampleUDPInput{
+		questionBytes: questionBytes,
+		conn:          exampleUDPConnection, // local copy
+		dataConv:      ExampleUDPBytesToFloat[dataConvType],
+	}
 
-  return b
+	return b
 }
 
 var ExampleUDPInputConstructorOk = AddConstructor("ExampleUDPInput", ExampleUDPInputConstructor)
