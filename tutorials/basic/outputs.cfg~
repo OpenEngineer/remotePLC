@@ -1,2 +1,0 @@
-out1 FileOutput out1.dat
-out2 PhilipsHueBridgeOutput 192.168.1.6 xxxx 1
