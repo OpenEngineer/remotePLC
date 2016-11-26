@@ -1,16 +1,5 @@
-2016/11/22 22:59:40 constructed block: var1[ScaledInput 2.0 1.0 ConstantInput 2002]
-2016/11/22 22:59:40 constructed block: out1[FileOutput out1.dat]
-2016/11/22 22:59:40 constructed block: time[TimeStop 3m]
-2016/11/22 22:59:40 constructed block: line1[ForkLine var1 out1]
-2016/11/22 22:59:51 summarized "2016-11-22_22h52m44.log":
-2016/11/22 22:59:56 summarized "2016-11-22_22h53m47.log":
-2016/11/22 22:59:56 summarized "2016-11-22_22h54m41.log":
-2016/11/22 22:59:56 summarized "2016-11-22_22h56m51.log":
-2016/11/22 23:00:02 summarized "2016-11-22_22h59m40.log":
-2016/11/22 23:00:02 summarized "2016-11-22_22h59m46.log":
-2016/11/22 23:00:02 summarized "2016-11-22_22h59m51.log":
-2016/11/22 23:00:07 summarized "2016-11-22_22h59m56.log":
-2016/11/22 23:00:12 summarized "2016-11-22_23h00m02.log":
-2016/11/22 23:00:17 summarized "2016-11-22_23h00m07.log":
-2016/11/22 23:00:23 summarized "2016-11-22_23h00m12.log":
-2016/11/22 23:00:28 summarized "2016-11-22_23h00m17.log":
+2016/11/26 15:38:57 reading TimeFileInput file in.dat
+2016/11/26 15:38:57 constructed block: in1[ScaledInput 2.0 1.0 TimeFileInput in.dat]
+2016/11/26 15:38:57 constructed block: out1[FileOutput out.dat]
+2016/11/26 15:38:57 constructed block: time[TimeStop 10s]
+2016/11/26 15:38:57 constructed block: line1[Line in1 out1]

@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"../logger/"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -20,17 +21,22 @@ func getHttpJson(uri string) (data map[string]interface{}, err error) {
 	err = nil
 
 	response, responseErr := http.Get(uri)
+	logger.WriteError("getHttpJson()", responseErr)
+
 	err = responseErr
 
 	defer response.Body.Close()
 
 	raw, readError := ioutil.ReadAll(response.Body)
+	logger.WriteError("getHttpJson()", readError)
 	if err == nil {
 		err = readError
 	}
 
 	var rawJson interface{}
 	jsonError := json.Unmarshal(raw, &rawJson)
+	logger.WriteError("getHttpJson()", jsonError)
+
 	if err == nil {
 		err = jsonError
 	}

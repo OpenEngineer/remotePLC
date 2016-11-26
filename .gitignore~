@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 log.*
 *.log
-=======
-tutorials/philipsHue/log.*
 mk5*
 Mk5*
->>>>>>> 6abe64bddd2b969d4143e1a04005ae2b209f55d0
