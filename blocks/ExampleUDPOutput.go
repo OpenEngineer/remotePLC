@@ -3,11 +3,8 @@ package blocks
 import (
 	"../logger/"
 	"errors"
-	"fmt"
-	"log"
 	"net"
 	"strconv"
-	"strings"
 )
 
 // see ExampleUDP.go for protocol details
@@ -37,10 +34,10 @@ func (b *ExampleUDPOutput) Update() {
 
 	questionBytes := exampleUDPPacketToBytes(b.question)
 
-	_, errWrite := b.conn.Write(msg)
+	_, errWrite := b.conn.Write(questionBytes)
 	logger.WriteError("ExampleUDPOutput.Update()", errWrite)
 
-	answerBytes := make([]byte, 1460)
+	answerBytes := make([]byte, EXAMPLEUDP_MAX_BYTES)
 	_, err := b.conn.Read(answerBytes)
 	logger.WriteError("ExampleUDPOutput.Update()", err)
 
@@ -48,7 +45,7 @@ func (b *ExampleUDPOutput) Update() {
 	answer := exampleUDPBytesToPacket(answerBytes) // TODO: create the error herein
 	if answer.Header.ErrorCode != 0 {
 		logger.WriteError("ExampleUDPOutput.Update()",
-			errors.New("protocol error "+strconv.Itoa(answer.Header.ErrorCode)))
+			errors.New("protocol error "+strconv.Itoa(int(answer.Header.ErrorCode))))
 	}
 
 	b.out = b.in[0:numRecords]

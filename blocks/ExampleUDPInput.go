@@ -2,11 +2,9 @@ package blocks
 
 import (
 	"../logger/"
-	"fmt"
-	"log"
+	"errors"
 	"net"
 	"strconv"
-	"strings"
 )
 
 // see ExampleUDP.go for protocol details (data structure, helper functions etc)
@@ -33,7 +31,7 @@ func (b *ExampleUDPInput) Update() {
 
 	if answer.Header.ErrorCode != 0 {
 		logger.WriteError("ExampleUDPInput.Update()",
-			errors.New("protocol error "+strconv.Itoa(answer.Header.ErrorCode)))
+			errors.New("protocol error "+strconv.Itoa(int(answer.Header.ErrorCode))))
 	} else if errWrite == nil && errRead == nil {
 		// Get the number of records and populate b.out
 		numRecords := int(answer.Header.NumRecords)
@@ -57,9 +55,9 @@ func ExampleUDPInputConstructor(words []string) Block {
 
 	question := ExampleUDPPacket{
 		Header: ExampleUDPHeader{
-			Version:    EXAMPLEUDP_VERSION,
-			SubVersion: EXAMPLEUDP_SUBVERSION,
-			SeqNo:      uint16(1), // TODO: management of SeqNo
+			Version: EXAMPLEUDP_VERSION,
+			OpId:    EXAMPLEUDP_READOP,
+			SeqNo:   uint16(1), // TODO: management of SeqNo
 		},
 	}
 

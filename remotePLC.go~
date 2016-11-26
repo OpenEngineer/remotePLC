@@ -4,16 +4,16 @@ import (
 	"./blocks/"
 	"./logger/"
 	"bufio"
+	"errors"
 	"flag"
-	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
 func main() {
-  logger.EventMode = logger.FATAL
-
-	inputTable, outputTable, logicTable, stoppersTable, lineTable := readInput()
+	logger.EventMode = logger.FATAL
+	inputTable, outputTable, logicTable, stoppersTable, lineTable := readConfig()
 
 	inputs := blocks.ConstructAll(inputTable)
 	outputs := blocks.ConstructAll(outputTable)
@@ -22,51 +22,58 @@ func main() {
 	lines := blocks.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
+	logger.EventMode = logger.WARNING
 	controlLoop(inputs, outputs, logic, stoppers, lines)
 }
 
-func readInput() (inputTable, outputTable, logicTable, stopTable, lineTable [][]string) {
+func readConfig() (inputTable, outputTable, logicTable, stopTable, lineTable [][]string) {
 	// Compile the flags
-	inputCmd := flag.String("i", "", "inputs semicolon separated")
-	inputFname := flag.String("I", "inputs.cfg", "inputs file")
-	outputCmd := flag.String("o", "", "outputs semicolon separated")
-	outputFname := flag.String("O", "outputs.cfg", "outputs file")
-	logicCmd := flag.String("g", "", "logic semicolon separated")
-	logicFname := flag.String("G", "logic.cfg", "logic file")
-	stopCmd := flag.String("s", "", "stops semicolon separated")
-	stopFname := flag.String("S", "stops.cfg", "stops file")
-	linesCmd := flag.String("l", "", "logic semicolon separated")
-	linesFname := flag.String("L", "lines.cfg", "stops file")
+	cmdString := flag.String("c", "", "blocks semicolon separated, appended to list of blocks")
+	fname := flag.String("f", "blocks.cfg", "file with list of blocks (default: blocks.cfg)")
 
 	// TODO: add more flags
 	flag.Parse()
 
-	// now read all the files
-	inputTable = append(inputTable, readFileTable(*inputFname, "inputs.cfg")...)
-	inputTable = append(inputTable, readStringTable(*inputCmd)...)
-	outputTable = append(outputTable, readFileTable(*outputFname, "outputs.cfg")...)
-	outputTable = append(outputTable, readStringTable(*outputCmd)...)
-	logicTable = append(logicTable, readFileTable(*logicFname, "logic.cfg")...)
-	logicTable = append(logicTable, readStringTable(*logicCmd)...)
-	stopTable = append(stopTable, readFileTable(*stopFname, "stops.cfg")...)
-	stopTable = append(stopTable, readStringTable(*stopCmd)...)
-	lineTable = append(lineTable, readFileTable(*linesFname, "lines.cfg")...)
-	lineTable = append(lineTable, readStringTable(*linesCmd)...)
+	// now read the files
+	blockTable := readFileTable(*fname)
+	blockTable = append(blockTable, readStringTable(*cmdString)...)
+
+	// create the sub tables, and leave the remainder in the block table
+	inputTable = filterTable(&blockTable, ".*Input$")
+	outputTable = filterTable(&blockTable, ".*Output$")
+	logicTable = filterTable(&blockTable, ".*(Node|Logic)$")
+	lineTable = filterTable(&blockTable, ".*Line$")
+	stopTable = filterTable(&blockTable, ".*Stop$")
+
+	// if the blockTable isnt empty now, then there is a problem
+	for _, record := range blockTable {
+		logger.WriteError("readConfig()",
+			errors.New("unknown block type: "+record[1]))
+	}
 
 	return
 }
 
-// TODO: ignore comments and empty lines
-func readFileTable(fname string, fnameFallback string) (table [][]string) {
-	file, err := os.Open(fname)
-	if err != nil {
-		if fname != fnameFallback {
-			log.Fatal(err)
+func filterTable(tableIn *[][]string, typeRegexp string) (tableOut [][]string) {
+	re := regexp.MustCompile(typeRegexp)
+
+	var tmpTable [][]string
+	for _, record := range *tableIn {
+		if re.MatchString(record[1]) {
+			tableOut = append(tableOut, record)
 		} else {
-			logger.WriteEvent("couldnt find default ", fnameFallback)
-			return
+			tmpTable = append(tmpTable, record)
 		}
 	}
+
+	*tableIn = tmpTable
+
+	return
+}
+
+func readFileTable(fname string) (table [][]string) {
+	file, err := os.Open(fname)
+	logger.WriteError("readFileTable()", err)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -92,13 +99,13 @@ func readStringTable(str string) (table [][]string) {
 		split1 = append(split1, strings.Split(s, ";"))
 	}
 
-	// Now flatten the first dimension
+	// Now flatten the first dimension (so that lines split by "\n" and ";" become equivalent)
 	var split2 []string
 	for _, s := range split1 {
 		split2 = append(split2, s...)
 	}
 
-	// now split each string into its tokens
+	// now split each line-string into its words
 	for _, s := range split2 {
 		table = append(table, strings.Fields(s))
 	}
@@ -109,13 +116,13 @@ func readStringTable(str string) (table [][]string) {
 }
 
 func cleanTable(table [][]string) [][]string {
-	table = deleteComments(table)
-	table = deleteEmptyRows(table)
+	table = removeComments(table)
+	table = removeEmptyRows(table)
 
 	return table
 }
 
-func deleteComments(table [][]string) (tableOut [][]string) {
+func removeComments(table [][]string) (tableOut [][]string) {
 	for _, row := range table {
 		rowOut := []string{}
 		for _, word := range row {
@@ -131,7 +138,7 @@ func deleteComments(table [][]string) (tableOut [][]string) {
 	return
 }
 
-func deleteEmptyRows(table [][]string) (tableOut [][]string) {
+func removeEmptyRows(table [][]string) (tableOut [][]string) {
 	for _, row := range table {
 		if len(row) > 0 {
 			tableOut = append(tableOut, row)
