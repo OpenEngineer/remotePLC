@@ -7,6 +7,8 @@ I wrote this out of frustation with unconfigurable controller software that requ
 # building
 In package root directory:
 > go build
+Static build:
+> make.sh
 
 # internet of things:
 * Philips Hue Bridge supported, user needs to specify an IP address and a user string (see Philips Hue API reference). I included a script in ./tutorials/philipsHue/ that can return these
