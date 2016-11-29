@@ -2,7 +2,7 @@
 soft plc, configurable through text files
 
 # details
-I wrote this out of frustation with unconfigurable controller software that requires rebuilding whenever there is a change. For linux based industrial controllers this is really unecessary. Also the fact that PLC logic is now a utility, means that it can easily be driven by higher level software (like dakota) for doing DoEs.
+see doc/remotePLC.pdf
 
 # building
 In package root directory:
