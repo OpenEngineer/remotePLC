@@ -1,18 +1,19 @@
 package blocks
 
 import (
-	"log"
+  "../logger/"
+  //"fmt"
 	"strconv"
 )
 
-type ScaledInput struct {
+type ScaleInput struct {
 	InputBlockData
 	scale  float64
 	offset float64
 	child  Block
 }
 
-func (b *ScaledInput) Update() {
+func (b *ScaleInput) Update() {
 	b.child.Update()
 	in := b.child.Get() // To make sure that they are the same size
 
@@ -25,23 +26,20 @@ func (b *ScaledInput) Update() {
 	}
 
 	b.in = b.out
+  //fmt.Println("ScaleInput", b.out)
 }
 
-func ScaledInputConstructor(words []string) Block {
+func ScaleInputConstructor(words []string) Block {
 	scale, errScale := strconv.ParseFloat(words[0], 64)
-	if errScale != nil {
-		log.Fatal("in ScaledInputConstructor(), ", errScale)
-	}
+  logger.WriteError("in ScaleInputConstructor()", errScale)
 
 	offset, errOffset := strconv.ParseFloat(words[1], 64)
-	if errOffset != nil {
-		log.Fatal("in ScaledInputConstructor(), ", errOffset)
-	}
+  logger.WriteError("in ScaleInputConstructor()", errOffset)
 
 	child := Construct(words[2], words[3:])
 
-	b := &ScaledInput{scale: scale, offset: offset, child: child}
+	b := &ScaleInput{scale: scale, offset: offset, child: child}
 	return b
 }
 
-var ScaledInputConstructorOk = AddConstructor("ScaledInput", ScaledInputConstructor)
+var ScaleInputConstructorOk = AddConstructor("ScaleInput", ScaleInputConstructor)

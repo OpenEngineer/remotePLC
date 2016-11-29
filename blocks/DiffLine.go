@@ -1,8 +1,12 @@
 package blocks
 
+import (
+  //"fmt"
+)
+
 type DiffLine struct {
 	BlockData
-	b0 []string // only two inputs, second minus first
+	b0 []string // only two inputs, second minus first (i.e. smaller larger out)
 	b1 string
 }
 

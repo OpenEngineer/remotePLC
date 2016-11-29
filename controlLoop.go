@@ -3,8 +3,10 @@ package main
 import (
 	"./blocks/"
 	"./logger/"
+  //"fmt"
 	"log"
 	"os"
+  "sort"
 	"time"
 )
 
@@ -20,14 +22,15 @@ func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block
 
 	// Cycle the input updates in the background
   logger.EventMode = logger.WARNING
-	cycleInputs(inputs, 250, 1)
+	cycleInputs(inputs, 250, 10) // same rate
 
 	// Main loop
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		<-ticker.C
 
 		for _, v := range orderedLines {
+      //fmt.Println("processing line: ", v)
 			lines[v].Update()
 		}
 		for _, v := range logic {
@@ -136,11 +139,12 @@ func checkConnectivity(inputs, outputs, logic, lines map[string]blocks.Block, or
 		}
 	}
 
+  // not necessarily fatal
 	for k, v := range logic {
 		v.Update()
 
 		if len(v.Get()) == 0 {
-			log.Fatal("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
+      logger.WriteEvent("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
 		}
 	}
 }
@@ -197,15 +201,25 @@ func cycleStoppers(stoppers map[string]blocks.Block) {
 	}
 }
 
+// TODO: a lexicographical sort operation
 func logData(dataLogger *logger.DataLogger, dataSets ...map[string]blocks.Block) {
 	fields := []string{}
 	data := [][]float64{}
 
-	for _, dataSet := range dataSets {
-		for k, v := range dataSet {
-			fields = append(fields, k)
-			data = append(data, v.Get())
-		}
+	for _, dataSet := range dataSets { // eg. inputs, outputs
+    // first sort the list of keys
+    keys := []string{}
+    for key, _ := range dataSet {
+      keys = append(keys, key)
+    }
+
+    sort.Strings(keys)
+
+    // then access these keys to append to the data slice
+    for _, key := range keys {
+			fields = append(fields, key)
+			data = append(data, dataSet[key].Get())
+    }
 	}
 
 	dataLogger.WriteData(fields, data)

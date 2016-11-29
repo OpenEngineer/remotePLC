@@ -1,7 +1,10 @@
 package logger
 
-import "log"
-import "os"
+import (
+  "fmt"
+  "log"
+  "os"
+)
 
 type EventModeType int
 
@@ -27,13 +30,22 @@ func createEventLogger() *log.Logger {
 
 var events *log.Logger
 
+// TODO: merge commonality between WriteEvents and WriteErrors
 func WriteEvent(s ...interface{}) {
 	if EventMode != QUIET {
 		if events == nil {
 			events = createEventLogger()
 		}
 
-		events.Print(s...)
+    if EventMode == WARNING {
+		  events.Print(s...)
+    } else if EventMode == FATAL {
+      fmt.Println(s...)
+		  events.Print(s...)
+    } else {
+			// TODO: make redundant by using fixed set commands for EventMode
+			log.Fatal("event mode not recognized")
+		}
 	}
 }
 

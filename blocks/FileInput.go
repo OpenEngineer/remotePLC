@@ -1,7 +1,9 @@
 package blocks
 
 import (
+  "../logger/"
 	"bufio"
+  //"fmt"
 	"os"
 	"strconv"
 )
@@ -9,7 +11,7 @@ import (
 type FileInput struct {
 	InputBlockData
 	file    *os.File // usefull for seeking
-	scanner *bufio.Scanner
+	//scanner *bufio.Scanner
 }
 
 func (b *FileInput) Update() {
@@ -17,8 +19,13 @@ func (b *FileInput) Update() {
 
 	b.out = []float64{}
 
-	for b.scanner.Scan() {
-		x, _ := strconv.ParseFloat(b.scanner.Text(), 64)
+  // rescan the file
+	scanner := bufio.NewScanner(b.file)
+	scanner.Split(bufio.ScanWords)
+
+	for scanner.Scan() {
+		x, _ := strconv.ParseFloat(scanner.Text(), 64)
+    //fmt.Println("FileInput found: ", x)
 		b.out = append(b.out, x)
 	}
 
@@ -30,12 +37,12 @@ func FileInputConstructor(words []string) Block {
 	if words[0] == "stdin" {
 		file = os.Stdin
 	} else {
-		file, _ = os.Create(words[0])
+    var errOpen error
+		file, errOpen = os.Open(words[0])
+    logger.WriteError("FileInputConstructor()", errOpen)
 	}
 
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanWords)
-	b := &FileInput{file: file, scanner: scanner}
+	b := &FileInput{file: file}
 	return b
 }
 
