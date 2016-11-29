@@ -1,5 +1,11 @@
-2016/11/26 15:38:57 reading TimeFileInput file in.dat
-2016/11/26 15:38:57 constructed block: in1[ScaledInput 2.0 1.0 TimeFileInput in.dat]
-2016/11/26 15:38:57 constructed block: out1[FileOutput out.dat]
-2016/11/26 15:38:57 constructed block: time[TimeStop 10s]
-2016/11/26 15:38:57 constructed block: line1[Line in1 out1]
+2016/11/29 21:07:42 reading TimeFileInput file in.dat
+2016/11/29 21:07:42 constructed block: in1[TimeFileInput in.dat]
+2016/11/29 21:07:42 constructed block: out1[FileOutput out.dat]
+2016/11/29 21:07:42 constructed block: node2[Node]
+2016/11/29 21:07:42 constructed block: delay1[Node]
+2016/11/29 21:07:42 constructed block: node1[Node]
+2016/11/29 21:07:42 constructed block: time[TimeStop 10s]
+2016/11/29 21:07:42 constructed block: line1[Line in1 node1]
+2016/11/29 21:07:42 constructed block: line2[Line node1 delay1]
+2016/11/29 21:07:42 constructed block: line3[Line delay1 node2]
+2016/11/29 21:07:42 constructed block: line4[Line node2 out1]

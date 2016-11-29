@@ -9,27 +9,32 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func main() {
 	logger.EventMode = logger.FATAL
-	inputTable, outputTable, logicTable, stoppersTable, lineTable := readConfig()
+	inputTable, outputTable, logicTable, nodeTable, stoppersTable, lineTable, timeStep, saveInterval := readConfig()
 
 	inputs := blocks.ConstructAll(inputTable)
 	outputs := blocks.ConstructAll(outputTable)
 	logic := blocks.ConstructAll(logicTable)
+	blocks.ConstructAll(nodeTable) // hidden from user
 	stoppers := blocks.ConstructAll(stoppersTable)
 	lines := blocks.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
 	logger.EventMode = logger.WARNING
-	controlLoop(inputs, outputs, logic, stoppers, lines)
+	controlLoop(inputs, outputs, logic, stoppers, lines, timeStep, saveInterval)
 }
 
-func readConfig() (inputTable, outputTable, logicTable, stopTable, lineTable [][]string) {
+func readConfig() (inputTable, outputTable, logicTable, nodeTable, stopTable, lineTable [][]string,
+	timeStep time.Duration, saveInterval int) {
 	// Compile the flags
 	cmdString := flag.String("c", "", "blocks semicolon separated, appended to list of blocks")
 	fname := flag.String("f", "blocks.cfg", "file with list of blocks (default: blocks.cfg)")
+	t := flag.String("t", "250ms", "length of cycle in [ms]")
+	s := flag.Int("s", 4, "save interval in number of cycles")
 
 	// TODO: add more flags
 	flag.Parse()
@@ -41,7 +46,8 @@ func readConfig() (inputTable, outputTable, logicTable, stopTable, lineTable [][
 	// create the sub tables, and leave the remainder in the block table
 	inputTable = filterTable(&blockTable, ".*Input$")
 	outputTable = filterTable(&blockTable, ".*Output$")
-	logicTable = filterTable(&blockTable, ".*(Node|Logic)$")
+	logicTable = filterTable(&blockTable, ".*Logic$")
+	nodeTable = filterTable(&blockTable, ".*Node$")
 	lineTable = filterTable(&blockTable, ".*Line$")
 	stopTable = filterTable(&blockTable, ".*Stop$")
 
@@ -50,6 +56,12 @@ func readConfig() (inputTable, outputTable, logicTable, stopTable, lineTable [][
 		logger.WriteError("readConfig()",
 			errors.New("unknown block type: "+record[1]))
 	}
+
+	var timeErr error
+	timeStep, timeErr = time.ParseDuration(*t)
+	logger.WriteError("readConfig()", timeErr)
+
+	saveInterval = *s
 
 	return
 }

@@ -3,9 +3,10 @@ package blocks
 import (
 	"strconv"
 	"time"
-  //"fmt"
+	//"fmt"
 )
 
+// TODO: smoother restart
 // unit of time is [sec]
 type PIDLogic struct {
 	BlockData
@@ -18,8 +19,8 @@ type PIDLogic struct {
 }
 
 func (b *PIDLogic) Update() {
-  numIn := len(b.in)
-  numPrev := len(b.ePrev)
+	numIn := len(b.in)
+	numPrev := len(b.ePrev)
 
 	// extend b.ePrev and b.eInt if b.in is longer
 	if numIn > numPrev {
@@ -34,9 +35,9 @@ func (b *PIDLogic) Update() {
 	}
 
 	// to get right size:
-  if len(b.out) != numIn {
-	  b.out = make([]float64, numIn)
-  }
+	if len(b.out) != numIn {
+		b.out = make([]float64, numIn)
+	}
 
 	// time step size
 	t := time.Now()

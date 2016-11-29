@@ -3,16 +3,16 @@ package main
 import (
 	"./blocks/"
 	"./logger/"
-  //"fmt"
 	"log"
 	"os"
-  "sort"
+	"sort"
 	"time"
 )
 
-func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block) {
+func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block, timeStep time.Duration,
+	saveInterval int) {
 	// Preprocessing step, make the orderedLines map
-  logger.EventMode = logger.FATAL
+	logger.EventMode = logger.FATAL
 	orderedLines := orderLines(lines, inputs, logic) // outputs and terminators are not needed for this
 
 	checkConnectivity(inputs, outputs, logic, lines, orderedLines) // all outputs and all logic must be connected
@@ -21,16 +21,16 @@ func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block
 	dataLogger := logger.MakeDataLogger()
 
 	// Cycle the input updates in the background
-  logger.EventMode = logger.WARNING
-	cycleInputs(inputs, 250, 10) // same rate
+	logger.EventMode = logger.WARNING
+	cycleInputs(inputs, timeStep, 10) // same rate
 
 	// Main loop
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(timeStep)
+	counter := 0
 	for {
 		<-ticker.C
 
 		for _, v := range orderedLines {
-      //fmt.Println("processing line: ", v)
 			lines[v].Update()
 		}
 		for _, v := range logic {
@@ -44,9 +44,14 @@ func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block
 
 		cycleStoppers(stoppers)
 
-		logData(dataLogger, inputs, outputs, logic)
+		if counter%saveInterval == 0 {
+			logData(dataLogger, inputs, outputs, logic)
+			counter = 0
+		}
+		counter += 1
 	}
 
+	// also save the last time
 	logData(dataLogger, inputs, outputs, logic)
 }
 
@@ -129,7 +134,7 @@ func checkConnectivity(inputs, outputs, logic, lines map[string]blocks.Block, or
 
 	// Update the lines
 	for _, v := range orderedLines {
-		lines[v].Update()
+		lines[v].Update() // should fix the nodes
 	}
 
 	// Check bad outputs
@@ -139,12 +144,12 @@ func checkConnectivity(inputs, outputs, logic, lines map[string]blocks.Block, or
 		}
 	}
 
-  // not necessarily fatal
+	// not necessarily fatal: TODO: distinction between logic and nodes
 	for k, v := range logic {
 		v.Update()
 
 		if len(v.Get()) == 0 {
-      logger.WriteEvent("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
+			logger.WriteEvent("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
 		}
 	}
 }
@@ -153,7 +158,7 @@ func cycleInputs(inputs map[string]blocks.Block, period time.Duration, desync ti
 	for _, v := range inputs {
 		time.Sleep(desync * time.Millisecond)
 		go func(b blocks.Block) {
-			ticker := time.NewTicker(period * time.Millisecond)
+			ticker := time.NewTicker(period)
 			for {
 				<-ticker.C
 				b.Update()
@@ -207,19 +212,19 @@ func logData(dataLogger *logger.DataLogger, dataSets ...map[string]blocks.Block)
 	data := [][]float64{}
 
 	for _, dataSet := range dataSets { // eg. inputs, outputs
-    // first sort the list of keys
-    keys := []string{}
-    for key, _ := range dataSet {
-      keys = append(keys, key)
-    }
+		// first sort the list of keys
+		keys := []string{}
+		for key, _ := range dataSet {
+			keys = append(keys, key)
+		}
 
-    sort.Strings(keys)
+		sort.Strings(keys)
 
-    // then access these keys to append to the data slice
-    for _, key := range keys {
+		// then access these keys to append to the data slice
+		for _, key := range keys {
 			fields = append(fields, key)
 			data = append(data, dataSet[key].Get())
-    }
+		}
 	}
 
 	dataLogger.WriteData(fields, data)

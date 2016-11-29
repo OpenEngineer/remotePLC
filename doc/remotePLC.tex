@@ -1,0 +1,116 @@
+%        File: remotePLC.tex
+%     Created: Die Nov 29 09:00  2016 C
+% Last Change: Die Nov 29 09:00  2016 C
+%
+\documentclass[a4paper]{article}
+\begin{document}
+\section{Introduction}
+This program is intended as a ``soft'' programmable PLC. I wrote it for a linux computer. It interfaces with hardware via ethernet or other IOs. The user specifies inputs and outputs in a ``blocks.cfg'' file, as well as the binding logic. The logic consists of ``lines'', ``logic''-blocks and ``node''-blocks. The user also specifies the criteria for ending the program (e.g. ``stop the program after 10min'').\\\\
+A simple example blocks.cfg can be found in tutorials/basic.
+\subsection{Background}
+I wanted a plc program I could use like a utility and in turn use in higher level programs, like eg. interfacing with Dakota in order to do complex DoEs. It was also important for me that reconfiguring the logic wouldn't require recompilation (flexibility). 
+\subsection{General structure}
+Arrays of double precision numbers are passed between the blocks via the ``lines''.
+Time loop:
+\begin{itemize}
+  \item inputs are cycled in the background (default 250ms, 10ms desyncing between each input). So the input cycle is NOT in sync with the rest of the program.
+  \item lines are updated (serially)
+  \item logic is updated (serially) 
+  \item lines are updated again (serially) , so that outputs are sure to get the needed values 
+  \item outputs are cycled (in parallel, forked and joined)
+  \item the stop criteria are cycled (serially)
+  \item data is logged
+\end{itemize}
+This is not a high performance plc program, and I'm not sure how it will behave in case of very short time loops. 1ms should be doable though, although most IO probably has higher latency.
+\section{Block types}
+\subsection{Input types}
+\subsubsection{ConstantInput}
+Declared as: name ConstantInput 1.0\\\\
+\subsubsection{FileInput}
+Declared as: name FileInput fname\\\\
+The file is reread every time step. So it can be used as a runtime modifiable input.
+Rows and columns don't matter, all individual numbers are read into an array. (by row first, then next row etc.)
+\subsubsection{ScaleInput}
+Declared as: name ScaleInput scale offset OtherInputType $\ldots$\\\\
+Immediately applies a scale-factor and an offset to all the doubles gotten from the OtherInputType.
+\subsubsection{TimeFileInput}
+Declared as: name TimeFileInput fname\\\\
+Reread when changed. First column is the time in seconds. Between two rows the result is gotten via linear interpolation. If one row contains more numbers than the other, then the other is copied locally, and completed with zeros, before interpolation.
+\subsubsection{ZeroInput}
+Declared as: name ZeroInput\\\\
+Identical to: name ConstantInput 0.0
+\subsubsection{ExampleUDPInput}
+Not functional code, just provided as a template for implementing the sensor side of your own UDP protocol.
+\subsection{Output types}
+\subsubsection{FileOutput}
+Declared as: name FileOutput fname\\\\
+Writes the numbers as a column to fname. Can also be stdout or stderr.
+File seeks to 0th position every time step though, so this can't be used for logging.
+\subsubsection{PhilipsHueBridgeOutput}
+Declared as: name PhilipsHueBridgeOutput ipaddr userkey lightNo\\\\
+See tutorial/philipsHue on how to determine the ipaddr and userkey for your philips hue bridge.
+This output sets the brightness of the light if only one number is given, the brightness and hue if two numbers are specified, the brightness hue and saturation if 3 numbers are specified. All 3 are numbers between 0 and 1. Negative brightness turns off the light, above 1.0 is clipped. Hue values above 1.0 are wrapped around to 0.0 (and negative is wrapped to 1.0). Saturation values are clipped to lie between 0.0 and 1.0 inclusive. The clipping/wrapping behaviour is done internally and not visible to the user.
+\subsubsection{ExampleUDPOutput}
+Not functional code, just provided as a template for implementing the actuator side of your own UDP protocol.
+\subsection{Lines}
+\subsubsection{Line}
+Declared as: name Line in1 out1 in2 out2\\\\
+Simply move data from in to out. Any number of pairs is possible
+\subsubsection{DiffLine}
+Declared as: name DiffLine in1 in2 out\\\\
+$out = in2 - in1$. If the input arrays have a different length then the longest is clipped to the shortest length.
+\subsubsection{ForkLine}
+Declared as: name ForkLine in out1 out2 out3 out4 \ldots\\\\
+Copy $in$ to all the specified outputs. Any number of outputs is possible.
+\subsubsection{JoinLine}
+Declared as: name JoinLine out in1 in2 in3 in4 \ldots\\\\
+Concatenate all the arrays from all the inputs and send to $out$. Any number of inputs is possible.
+\subsubsection{RegexpForkLine}
+Create a ForkLine where the output list is created by matching a regexp on the names of other blocks.
+\subsubsection{RegexpJoinLine}
+Create a JoinLine where the input list is created by matching a regexp on the names of other blocks.
+\subsubsection{RegexpLine}
+Create a Line by matching regexp on all the blocks in order to determine the pairs. Unpaired in or outputs are ignored.
+\subsubsection{SplitLine}
+Declared as: name SplitLine 1 in out1 out2 out3 \_ out5\\\\
+Split the input array in <size>-parts and send each section to a corresponding output. The underscore means that that section is ignored.
+\subsection{Logic}
+TODO: Selfoptimizing PID blocks.
+\subsubsection{DelayLogic}
+Declared as: name DelayLogic\\\\
+Incoming data is simply moved to the outgoing side.
+\subsubsection{PIDLogic}
+Declared as: name PIDLogic KP KI KD\\\\
+Keeps track of the previous time step error and error integral. Input to this is the error! and not the setpoint value. You will need to do a diffline before this block. TODO: when the program stops the state is lost, it would probably be best to store this state in a file, so that the program can resume smoothly. This means that the simple kill signals needs to be caught and give the program time to complete the saving of the state.\\
+\subsection{Nodes}
+These blocks copy their input directly to their outputs. There is no update step. This useful when you want to propagate the most recent value downstream.
+\subsubsection{LimitNode}
+Declared as: name LimitNode 0.0 1.0\\\\
+Clips all elements of the input array so they lie between these two numbers.
+\subsubsection{Node}
+Declared as: name Node\\\\
+Copy upstream values immediately downstream.
+\subsubsection{ScaleNode}
+Like ScaleInput: name ScaleNode scale offset\\\\
+\subsection{Stop}
+A number <= -1 means that the stop block is converged. A number between -1 and <= 1 means that the stop block is neither converged or diverged. A number above 1 means that the block is diverging. The program stop if all blocks are converged, or if one block is diverging. If there are no stop blocks defined then the program exits immediately.
+\subsubsection{TimeOutStop}
+Declared as: name TimeOutStop duration\\\\
+duration is a string that is parsed. (see go/pkg/time documentation). So this means that the program is ``diverging'' after <duration>.
+\subsubsection{TimeStop}
+Declared as: name TimeStop duration\\\\
+Program is ``converging'' after <duration>.
+\section{TODO}
+Still a primitive program. Send recommendations to christian.schmitz@telenet.be
+Does anything like this exist? (in that case: sorry for duplicating any one elses efforts)
+\begin{itemize}
+  \item anonymous blocks (autogeneration of name for use in internal map date structures)
+  \item piping notation for sequential blocks, so the the lines don't need to be specified manually
+  \item multiline statements in blocks.cfg
+  \item semicolon parsing in blocks.cfg
+\end{itemize}
+\section{License}
+I guess MIT
+\end{document}
+
+
