@@ -46,8 +46,8 @@ func MakeDataLogger() *DataLogger {
 		headerPrefix: "#date time",
 		fnameRegexp:  regexp.MustCompile("^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}h[0-9]{2}m[0-9]{2}.log$"),
 		fnameFormat:  "2006-01-02_15h04m05.log",
-		maxFileSize:  1024,
-		maxTotalSize: 1024 * 2,
+		maxFileSize:  1024*1024*10, // 10MB
+		maxTotalSize: 1024*1024*50, // 50MB
 		dir:          dir,
 		summaryFile:  summaryFile,
 	}
@@ -215,13 +215,13 @@ func (d *DataLogger) compileRecord(fields []string, data [][]float64) (header st
 	return header, record
 }
 
-func (d *DataLogger) refreshLogger() error {
+func (d *DataLogger) refreshLogger(header string) error {
 	// is dataLog too big and does a new one need to be created?
 	info, err := d.file.Stat()
 	if err != nil {
 		return err
 	}
-	if info.Size() > d.maxFileSize {
+	if info.Size() > d.maxFileSize || header != d.header {
 		d.reopenLogger()
 	}
 
@@ -232,7 +232,7 @@ func (d *DataLogger) WriteData(fields []string, x [][]float64) {
 	// generate the header and the data
 	header, record := d.compileRecord(fields, x)
 
-	d.refreshLogger()
+	d.refreshLogger(header)
 
 	// compare the header, if it is different print it
 	if header != d.header {

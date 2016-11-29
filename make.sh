@@ -1,4 +1,13 @@
 #!/bin/bash
-export CGO_ENABLED=0
+if [ $# -eq 1 -a "$1" == "-s" ]
+then
+  export CGO_ENABLED=0
+  go build -ldflags "-linkmode external -extldflags -static"
+else
+  go build
+fi
 
-go build -ldflags "-linkmode external -extldflags -static"
+if [ -d ~/bin/ ]
+then
+  cp remotePLC ~/bin/
+fi
