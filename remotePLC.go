@@ -3,7 +3,7 @@ package main
 import (
 	"./blocks/"
 	"./logger/"
-	"bufio"
+	//"bufio"
 	"errors"
 	"flag"
 	"os"
@@ -12,21 +12,26 @@ import (
 	"time"
 )
 
+const (
+	COMMENT_CHAR       = "#"
+	EXTRA_NEWLINE_CHAR = ";"
+)
+
 func main() {
 	logger.EventMode = logger.FATAL
 	inputTable, outputTable, logicTable, nodeTable, stoppersTable, lineTable, timeStep, saveInterval := readConfig()
 
-  logger.WriteEvent("Constructing inputs:")
+	logger.WriteEvent("Constructing inputs:")
 	inputs := blocks.ConstructAll(inputTable)
-  logger.WriteEvent("Construcing outputs:")
+	logger.WriteEvent("Construcing outputs:")
 	outputs := blocks.ConstructAll(outputTable)
-  logger.WriteEvent("Constructing logic:")
+	logger.WriteEvent("Constructing logic:")
 	logic := blocks.ConstructAll(logicTable)
-  logger.WriteEvent("Constructing nodes:")
-  nodes := blocks.ConstructAll(nodeTable)
-  logger.WriteEvent("Constructing stoppers:")
+	logger.WriteEvent("Constructing nodes:")
+	nodes := blocks.ConstructAll(nodeTable)
+	logger.WriteEvent("Constructing stoppers:")
 	stoppers := blocks.ConstructAll(stoppersTable)
-  logger.WriteEvent("Construction lines:")
+	logger.WriteEvent("Construction lines:")
 	lines := blocks.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
@@ -91,18 +96,21 @@ func filterTable(tableIn *[][]string, typeRegexp string) (tableOut [][]string) {
 
 func readFileTable(fname string) (table [][]string) {
 	file, err := os.Open(fname)
+	defer file.Close()
 	logger.WriteError("readFileTable()", err)
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		words := strings.Fields(line)
+	// get the size of the file
+	finfo, errStat := os.Stat(fname)
+	logger.WriteError("readFileTable()", errStat)
 
-		table = append(table, words)
-	}
-	file.Close()
+	fileBytes := make([]byte, int(finfo.Size()))
 
-	table = cleanTable(table)
+	// read the whole file into memory
+	_, errRead := file.Read(fileBytes)
+	logger.WriteError("readFileTable()", errRead)
+
+	// now process the string with the lower level readStringTable() function
+	table = readStringTable(string(fileBytes))
 
 	return
 }
@@ -114,7 +122,7 @@ func readStringTable(str string) (table [][]string) {
 	// then loop these and split by semicolon
 	var split1 [][]string
 	for _, s := range split0 {
-		split1 = append(split1, strings.Split(s, ";"))
+		split1 = append(split1, strings.Split(s, EXTRA_NEWLINE_CHAR))
 	}
 
 	// Now flatten the first dimension (so that lines split by "\n" and ";" become equivalent)
@@ -144,7 +152,7 @@ func removeComments(table [][]string) (tableOut [][]string) {
 	for _, row := range table {
 		rowOut := []string{}
 		for _, word := range row {
-			if string(word[0]) == "#" {
+			if string(word[0]) == COMMENT_CHAR {
 				break
 			}
 			rowOut = append(rowOut, word)

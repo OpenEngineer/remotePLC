@@ -18,13 +18,9 @@ func (b *JoinLine) Update() {
 }
 
 func JoinLineConstructor(name string, words []string) Block {
-	b0 := words[1:]
-	b1 := words[0]
+	b0 := checkNames(words[1:])
+	b1 := checkName(words[0])
 
-  assertBlock(b1)
-  for _, v := range b0 {
-    assertBlock(v)
-  }
 	b := &JoinLine{b0: b0, b1: b1}
 	return b
 }

@@ -9,7 +9,7 @@ func RegexpForkLineConstructor(name string, words []string) Block {
 		log.Fatal("in RegexpForkLineConstructor(), \"", words[1], "\", ", err1)
 	}
 
-	b0 := words[0]
+	b0 := checkName(words[0])
 	b1 := []string{}
 
 	// collect all the matched blocks

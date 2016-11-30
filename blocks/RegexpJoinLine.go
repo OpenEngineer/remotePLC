@@ -10,7 +10,7 @@ func RegexpJoinLineConstructor(name string, words []string) Block {
 	}
 
 	b0 := []string{}
-	b1 := words[1]
+	b1 := checkName(words[1])
 
 	// collect all the matched blocks
 	for k, _ := range Blocks {

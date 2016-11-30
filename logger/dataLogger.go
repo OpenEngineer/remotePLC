@@ -12,7 +12,13 @@ import (
 	"time"
 )
 
-type DataLogger struct {
+// TODO: only one datalogger makes sense
+// TODO: remove the header
+var DataLoggerInitialized = false
+
+var DataLogger *DataLoggerType
+
+type DataLoggerType struct {
 	headerPrefix string
 	header       string // including the headerPrefix
 
@@ -31,7 +37,7 @@ type DataLogger struct {
 }
 
 // TODO: more arguments
-func MakeDataLogger() *DataLogger {
+func makeDataLogger() {
 	dir, dirErr := os.Open(".")
 	if dirErr != nil {
 		log.Fatal(dirErr)
@@ -42,22 +48,20 @@ func MakeDataLogger() *DataLogger {
 		log.Fatal(summaryErr)
 	}
 
-	d := &DataLogger{
+	DataLogger = &DataLoggerType{
 		headerPrefix: "#date time",
 		fnameRegexp:  regexp.MustCompile("^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}h[0-9]{2}m[0-9]{2}.log$"),
 		fnameFormat:  "2006-01-02_15h04m05.log",
-		maxFileSize:  1024*1024*10, // 10MB
-		maxTotalSize: 1024*1024*50, // 50MB
+		maxFileSize:  1024 * 1024 * 10, // 10MB
+		maxTotalSize: 1024 * 1024 * 50, // 50MB
 		dir:          dir,
 		summaryFile:  summaryFile,
 	}
 
-	d.reopenLogger()
-
-	return d
+	DataLogger.reopenLogger()
 }
 
-func (d *DataLogger) reopenLogger() {
+func (d *DataLoggerType) reopenLogger() {
 	if d.file != nil {
 		err := d.file.Close()
 		if err != nil {
@@ -80,7 +84,7 @@ func (d *DataLogger) reopenLogger() {
 	d.file = file
 }
 
-func (d *DataLogger) listFiles() (fnames []string, sizes []int64, totalSize int64) {
+func (d *DataLoggerType) listFiles() (fnames []string, sizes []int64, totalSize int64) {
 	d.dir.Seek(0, 0)
 	infos, err := d.dir.Readdir(-1)
 	if err != nil {
@@ -137,13 +141,13 @@ func readFirstAndLastLine(file *os.File) (line0 string, line1 string, err error)
 	return
 }
 
-func (d *DataLogger) writeSummary(line string) error {
+func (d *DataLoggerType) writeSummary(line string) error {
 	_, err := fmt.Fprintln(d.summaryFile, line)
 	return err
 }
 
 // delete files matching format below in case total size in folder is too large
-func (d *DataLogger) cleanDir() {
+func (d *DataLoggerType) cleanDir() {
 	fnames, sizes, totalSize := d.listFiles()
 
 	for i, fname := range fnames {
@@ -190,7 +194,7 @@ func (d *DataLogger) cleanDir() {
 }
 
 // TODO: custom record format
-func (d *DataLogger) compileRecord(fields []string, data [][]float64) (header string, record string) {
+func (d *DataLoggerType) compileRecord(fields []string, data [][]float64) (header string, record string) {
 	for i := 0; i < len(fields); i++ {
 		n := len(data[i])
 		for j := 0; j < n; j++ {
@@ -215,7 +219,7 @@ func (d *DataLogger) compileRecord(fields []string, data [][]float64) (header st
 	return header, record
 }
 
-func (d *DataLogger) refreshLogger(header string) error {
+func (d *DataLoggerType) refreshLogger(header string) error {
 	// is dataLog too big and does a new one need to be created?
 	info, err := d.file.Stat()
 	if err != nil {
@@ -228,7 +232,16 @@ func (d *DataLogger) refreshLogger(header string) error {
 	return nil
 }
 
-func (d *DataLogger) WriteData(fields []string, x [][]float64) {
+// the only global function in the dataLogger part of this module
+func WriteData(fields []string, x [][]float64) {
+	if !DataLoggerInitialized {
+		makeDataLogger()
+		DataLoggerInitialized = true
+	}
+
+	// TODO: all in globals
+	d := DataLogger
+
 	// generate the header and the data
 	header, record := d.compileRecord(fields, x)
 

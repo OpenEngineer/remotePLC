@@ -3,16 +3,19 @@ package blocks
 import (
 	"../logger/"
 	"log"
-  //"net"
+	"regexp"
+	"sort"
 )
 
 type BlockModeType int
 
 const (
-  REGULAR BlockModeType = iota
-  CONNECTIVITY
-  STRICT
+	REGULAR BlockModeType = iota
+	CONNECTIVITY
+	STRICT
 )
+
+const HIDDEN_SUFFIX_CHAR = "_"
 
 var BlockMode BlockModeType = REGULAR
 
@@ -58,15 +61,42 @@ func (b *OutputBlockData) Get() []float64 {
 
 var Blocks = make(map[string]Block)
 
-func assertBlock(k string) {
-	if _, ok := Blocks[k]; !ok {
-		log.Fatal("couldn't find block ", k)
+func checkName(name string) string {
+	// if the name doesn't end with underscore then append it, else remove it
+	var altName string
+	if name[len(name):] == HIDDEN_SUFFIX_CHAR {
+		altName = name[:len(name)-1]
+	} else {
+		altName = name + HIDDEN_SUFFIX_CHAR
 	}
+
+	_, ok := Blocks[name]
+	_, okAlt := Blocks[altName]
+
+	var checkedName string
+	if !ok && okAlt {
+		checkedName = altName
+	} else if !okAlt && ok {
+		checkedName = name
+	} else {
+		log.Fatal("couldn't find block ", name, " (or ", altName, ")")
+	}
+
+	return checkedName
 }
 
-var Constructors = make(map[string]func(string,[]string) Block)
+func checkNames(names []string) (checkedNames []string) {
+	for _, name := range names {
+		checkedName := checkName(name)
+		checkedNames = append(checkedNames, checkedName)
+	}
 
-func AddConstructor(key string, fn func(string,[]string) Block) bool {
+	return
+}
+
+var Constructors = make(map[string]func(string, []string) Block)
+
+func AddConstructor(key string, fn func(string, []string) Block) bool {
 	Constructors[key] = fn
 	return true
 }
@@ -96,7 +126,34 @@ func ConstructAll(wordsTable [][]string) map[string]Block {
 	return m
 }
 
-// a list of open client-server connections, so that they can be reused between the blocks
-// the key is: "net:ip:port"
-// TODO: really necessary? better to use global conn vars in relevant block types?
-//var connections = make(map[string]net.Conn)
+func getSortedNames() (names []string) {
+	for name, _ := range Blocks { // eg. inputs, outputs
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	return
+}
+
+func GetVisibleFields(visibleNameString string) (fields []string, data [][]float64) {
+	// names of all the blocks
+	names := getSortedNames()
+
+	// visible rule
+	visibleName := regexp.MustCompile(visibleNameString)
+
+	for _, name := range names {
+		if visibleName.MatchString(name) {
+			fields = append(fields, name)
+			data = append(data, Blocks[name].Get())
+		}
+	}
+
+	return
+}
+
+func LogData() {
+	fields, data := GetVisibleFields(".*[^" + HIDDEN_SUFFIX_CHAR + "]$")
+
+	logger.WriteData(fields, data)
+}

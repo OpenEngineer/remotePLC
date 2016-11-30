@@ -56,7 +56,7 @@ Not functional code, just provided as a template for implementing the actuator s
 \subsection{Lines}
 \subsubsection{Line}
 Declared as: name Line in1 out1 in2 out2\\\\
-Simply move data from in to out. Any number of pairs is possible
+Simply move data from in to out. Any number of pairs is possible. Unpaired lines throw an error.
 \subsubsection{DiffLine}
 Declared as: name DiffLine in1 in2 out\\\\
 $out = in2 - in1$. If the input arrays have a different length then the longest is clipped to the shortest length.

@@ -1,11 +1,17 @@
-2016/11/29 21:07:42 reading TimeFileInput file in.dat
-2016/11/29 21:07:42 constructed block: in1[TimeFileInput in.dat]
-2016/11/29 21:07:42 constructed block: out1[FileOutput out.dat]
-2016/11/29 21:07:42 constructed block: node2[Node]
-2016/11/29 21:07:42 constructed block: delay1[Node]
-2016/11/29 21:07:42 constructed block: node1[Node]
-2016/11/29 21:07:42 constructed block: time[TimeStop 10s]
-2016/11/29 21:07:42 constructed block: line1[Line in1 node1]
-2016/11/29 21:07:42 constructed block: line2[Line node1 delay1]
-2016/11/29 21:07:42 constructed block: line3[Line delay1 node2]
-2016/11/29 21:07:42 constructed block: line4[Line node2 out1]
+2016/11/30 22:59:14 Constructing inputs:
+2016/11/30 22:59:14 reading TimeFileInput file in.dat
+2016/11/30 22:59:14 constructed block: in1[TimeFileInput in.dat]
+2016/11/30 22:59:14 Construcing outputs:
+2016/11/30 22:59:14 constructed block: out1[FileOutput out.dat]
+2016/11/30 22:59:14 Constructing logic:
+2016/11/30 22:59:14 Constructing nodes:
+2016/11/30 22:59:14 constructed block: node2_[Node]
+2016/11/30 22:59:14 constructed block: delay1_[Node]
+2016/11/30 22:59:14 constructed block: node1_[Node]
+2016/11/30 22:59:14 Constructing stoppers:
+2016/11/30 22:59:14 constructed block: time_[TimeStop 10s]
+2016/11/30 22:59:14 Construction lines:
+2016/11/30 22:59:14 constructed block: line1_[Line in1 node1_]
+2016/11/30 22:59:14 constructed block: line2_[Line node1 delay1]
+2016/11/30 22:59:14 constructed block: line3_[Line delay1 node2]
+2016/11/30 22:59:14 constructed block: line4_[Line node2 out1]

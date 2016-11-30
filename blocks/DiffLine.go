@@ -1,7 +1,6 @@
 package blocks
 
-import (
-)
+import ()
 
 type DiffLine struct {
 	BlockData
@@ -32,8 +31,8 @@ func (b *DiffLine) Update() {
 }
 
 func DiffLineConstructor(name string, words []string) Block {
-	b0 := words[0:2]
-	b1 := words[2]
+	b0 := checkNames(words[0:2])
+	b1 := checkName(words[2])
 
 	b := &DiffLine{b0: b0, b1: b1}
 	return b
