@@ -22,6 +22,17 @@ Time loop:
   \item data is logged
 \end{itemize}
 This is not a high performance plc program, and I'm not sure how it will behave in case of very short time loops. 1ms should be doable though, although most IO probably has higher latency.
+\subsection{Modules and Files}
+In more or less chronological call order:
+\begin{itemize}
+  \item main::remotePLC.go: parse args, read blocks, construct blocks, start controlLoop, COMMENT\_CHAR, EXTRA\_NEWLINE\_CHAR
+  \item main::controlLoop.go: order lines, check connectivity, get inputs once, start cycling inputs in background, start main time loop, log data once before exiting
+  \item main::controlLoop.go.mainTimeLoop: cycle lines, cycle logic, cycle lines, cycle outputs, cycle stoppers, logdata
+  \item blocks::blocks.go: Blocks map, constructor map, input/basic/output structs/interfaces, get blocks, add and get constructors, construct block, LogData(), BlockModeType=REGULAR,CONNECTIVITY,STRICT, HIDDEN\_SUFFIX\_CHAR
+  \item blocks::*: dynamically constructed blocks with Get(), Put(), and Update() functions
+  \item logger::eventLogger.go: EventModeType=QUIET,WARNING,FATAL, WriteEvents(), WriteError()
+  \item logger::dataLogger.go: headerPrefix, fnameFormat/regexp, maxFileSize, maxTotalSize, WriteData()
+\end{itemize}
 \section{Block types}
 \subsection{Input types}
 \subsubsection{ConstantInput}
@@ -108,7 +119,7 @@ Still a primitive program. Send recommendations to christian.schmitz@telenet.be
 Does anything like this exist? (in that case: sorry for duplicating any one elses efforts)
 \begin{itemize}
   \item anonymous blocks (autogeneration of name for use in internal map date structures)
-  \item piping notation for sequential blocks, so the the lines don't need to be specified manually
+  \item piping notation for sequential blocks, so the the lines don't always need to be specified manually
   \item multiline statements in blocks.cfg
   \item semicolon parsing in blocks.cfg
 \end{itemize}
