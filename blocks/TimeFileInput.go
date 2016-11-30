@@ -177,7 +177,7 @@ func reopenFile(fname string, file *os.File) (*os.File, error) {
 	return file, err
 }
 
-func TimeFileInputConstructor(words []string) Block {
+func TimeFileInputConstructor(name string, words []string) Block {
 	var file *os.File
 	fname := words[0]
 	var err error

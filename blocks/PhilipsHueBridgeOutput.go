@@ -182,7 +182,7 @@ func (b *PhilipsHueBridgeOutput) Update() {
 	}
 }
 
-func PhilipsHueBridgeOutputConstructor(words []string) Block {
+func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	username := words[1]
 	lightNo := words[2]

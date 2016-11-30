@@ -15,7 +15,7 @@ func (b *ConstantInput) Update() {
 	b.in = b.out
 }
 
-func ConstantInputConstructor(words []string) Block {
+func ConstantInputConstructor(name string, words []string) Block {
 	constants := []float64{}
 	for _, word := range words {
 		constant, err := strconv.ParseFloat(word, 64)

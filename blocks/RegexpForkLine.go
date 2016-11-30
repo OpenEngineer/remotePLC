@@ -3,7 +3,7 @@ package blocks
 import "log"
 import "regexp"
 
-func RegexpForkLineConstructor(words []string) Block {
+func RegexpForkLineConstructor(name string, words []string) Block {
 	re1, err1 := regexp.Compile(words[1])
 	if err1 != nil {
 		log.Fatal("in RegexpForkLineConstructor(), \"", words[1], "\", ", err1)

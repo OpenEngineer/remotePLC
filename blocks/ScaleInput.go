@@ -29,14 +29,14 @@ func (b *ScaleInput) Update() {
   //fmt.Println("ScaleInput", b.out)
 }
 
-func ScaleInputConstructor(words []string) Block {
+func ScaleInputConstructor(name string, words []string) Block {
 	scale, errScale := strconv.ParseFloat(words[0], 64)
   logger.WriteError("in ScaleInputConstructor()", errScale)
 
 	offset, errOffset := strconv.ParseFloat(words[1], 64)
   logger.WriteError("in ScaleInputConstructor()", errOffset)
 
-	child := Construct(words[2], words[3:])
+	child := Construct(name+"_child", words[2], words[3:])
 
 	b := &ScaleInput{scale: scale, offset: offset, child: child}
 	return b

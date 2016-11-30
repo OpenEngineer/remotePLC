@@ -6,6 +6,16 @@ import (
   //"net"
 )
 
+type BlockModeType int
+
+const (
+  REGULAR BlockModeType = iota
+  CONNECTIVITY
+  STRICT
+)
+
+var BlockMode BlockModeType = REGULAR
+
 type Block interface {
 	Get() []float64
 	Put([]float64)
@@ -54,26 +64,26 @@ func assertBlock(k string) {
 	}
 }
 
-var Constructors = make(map[string]func([]string) Block)
+var Constructors = make(map[string]func(string,[]string) Block)
 
-func AddConstructor(key string, fn func([]string) Block) bool {
+func AddConstructor(key string, fn func(string,[]string) Block) bool {
 	Constructors[key] = fn
 	return true
 }
 
-func Construct(x string, y []string) Block {
+func Construct(name string, constructorType string, words []string) Block {
 	var b Block
-	if constructor, ok := Constructors[x]; ok {
-		b = constructor(y)
+	if constructor, ok := Constructors[constructorType]; ok {
+		b = constructor(name, words)
 	} else {
-		log.Fatal("invalid block constructor: ", x)
+		log.Fatal("invalid block constructor: ", constructorType)
 	}
 	return b
 }
 
 func ConstructGlobal(key string, words []string) Block {
 	defer logger.WriteEvent("constructed block: ", key, words)
-	b := Construct(words[0], words[1:])
+	b := Construct(key, words[0], words[1:])
 	Blocks[key] = b
 	return b
 }

@@ -26,6 +26,7 @@ This is not a high performance plc program, and I'm not sure how it will behave 
 \subsection{Input types}
 \subsubsection{ConstantInput}
 Declared as: name ConstantInput 1.0\\\\
+Arrays are possible by specifying additional numbers.
 \subsubsection{FileInput}
 Declared as: name FileInput fname\\\\
 The file is reread every time step. So it can be used as a runtime modifiable input.
@@ -92,6 +93,8 @@ Declared as: name Node\\\\
 Copy upstream values immediately downstream.
 \subsubsection{ScaleNode}
 Like ScaleInput: name ScaleNode scale offset\\\\
+\subsubsection{BitifyNode}
+Convert each input into a 0 or 1 and then multiply by corresponding power of 2. Output is a single number representing the uint resulting value.
 \subsection{Stop}
 A number <= -1 means that the stop block is converged. A number between -1 and <= 1 means that the stop block is neither converged or diverged. A number above 1 means that the block is diverging. The program stop if all blocks are converged, or if one block is diverging. If there are no stop blocks defined then the program exits immediately.
 \subsubsection{TimeOutStop}

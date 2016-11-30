@@ -21,7 +21,7 @@ func (b *Line) Update() {
 	b.out = b.in
 }
 
-func LineConstructor(words []string) Block {
+func LineConstructor(name string, words []string) Block {
 	if len(words)%2 == 1 {
 		log.Fatal("in LineConstructor, ", words, ",error: unpaired lines")
 	}

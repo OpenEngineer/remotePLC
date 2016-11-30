@@ -16,16 +16,22 @@ func main() {
 	logger.EventMode = logger.FATAL
 	inputTable, outputTable, logicTable, nodeTable, stoppersTable, lineTable, timeStep, saveInterval := readConfig()
 
+  logger.WriteEvent("Constructing inputs:")
 	inputs := blocks.ConstructAll(inputTable)
+  logger.WriteEvent("Construcing outputs:")
 	outputs := blocks.ConstructAll(outputTable)
+  logger.WriteEvent("Constructing logic:")
 	logic := blocks.ConstructAll(logicTable)
-	blocks.ConstructAll(nodeTable) // hidden from user
+  logger.WriteEvent("Constructing nodes:")
+  nodes := blocks.ConstructAll(nodeTable)
+  logger.WriteEvent("Constructing stoppers:")
 	stoppers := blocks.ConstructAll(stoppersTable)
+  logger.WriteEvent("Construction lines:")
 	lines := blocks.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
 	logger.EventMode = logger.WARNING
-	controlLoop(inputs, outputs, logic, stoppers, lines, timeStep, saveInterval)
+	controlLoop(inputs, outputs, logic, nodes, stoppers, lines, timeStep, saveInterval)
 }
 
 func readConfig() (inputTable, outputTable, logicTable, nodeTable, stopTable, lineTable [][]string,

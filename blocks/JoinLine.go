@@ -17,7 +17,7 @@ func (b *JoinLine) Update() {
 	b.out = b.in
 }
 
-func JoinLineConstructor(words []string) Block {
+func JoinLineConstructor(name string, words []string) Block {
 	b0 := words[1:]
 	b1 := words[0]
 

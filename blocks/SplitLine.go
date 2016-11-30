@@ -23,26 +23,30 @@ func (b *SplitLine) Update() {
       continue
     }
 
-    i0 := i*b.nf
-    i1 := (i+1)*b.nf
+    if BlockMode == CONNECTIVITY {
+      Blocks[v].Put([]float64{1})
+    } else {
+      i0 := i*b.nf
+      i1 := (i+1)*b.nf
 
-    //fmt.Println(i0, i1, len(b.in), len(b.b1))
-    if i0 > len(b.in)-1 {
-      logger.WriteEvent("warning, SplitLine.Update(): too few output blocks")
-      break
-    }
+      //fmt.Println(i0, i1, len(b.in), len(b.b1))
+      if i0 > len(b.in)-1 {
+        logger.WriteEvent("warning, SplitLine.Update(): too few output blocks")
+        break
+      }
 
-    if i1 > len(b.in) {
-      i1 = len(b.in)
-      logger.WriteEvent("warning, SplitLine.Update(): too few output blocks, truncating")
+      if i1 > len(b.in) {
+        i1 = len(b.in)
+        logger.WriteEvent("warning, SplitLine.Update(): too few output blocks, truncating")
+      }
+      Blocks[v].Put(b.in[i0:i1])
     }
-    Blocks[v].Put(b.in[i0:i1])
-	}
+  }
 
 	b.out = b.in
 }
 
-func SplitLineConstructor(words []string) Block {
+func SplitLineConstructor(name string, words []string) Block {
   nf, errInt := strconv.ParseInt(words[0], 10, 64)
   logger.WriteError("SplitLineConstructor()", errInt)
 

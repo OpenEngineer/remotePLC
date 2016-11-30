@@ -9,7 +9,7 @@ func (b *Node) Put(x []float64) {
 	b.out = x
 }
 
-func NodeConstructor(words []string) Block {
+func NodeConstructor(name string, words []string) Block {
 	b := &Node{}
 	return b
 }

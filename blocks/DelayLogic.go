@@ -8,7 +8,7 @@ func (b *DelayLogic) Update() {
 	b.out = b.in
 }
 
-func DelayLogicConstructor(words []string) Block {
+func DelayLogicConstructor(name string, words []string) Block {
 	b := &DelayLogic{}
 	return b
 }

@@ -29,7 +29,7 @@ func (b *LimitNode) Put(x []float64) {
   }
 }
 
-func LimitNodeConstructor(words []string) Block {
+func LimitNodeConstructor(name string, words []string) Block {
 	x0, err0 := strconv.ParseFloat(words[0], 64)
   logger.WriteError("in LimitNodeConstructor()", err0)
 

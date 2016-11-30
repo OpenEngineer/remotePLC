@@ -22,7 +22,7 @@ func (b *ScaleNode) Put(x []float64) {
   }
 }
 
-func ScaleNodeConstructor(words []string) Block {
+func ScaleNodeConstructor(name string, words []string) Block {
 	scale, errScale := strconv.ParseFloat(words[0], 64)
   logger.WriteError("in ScaleNodeConstructor()", errScale)
 

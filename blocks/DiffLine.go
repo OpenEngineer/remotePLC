@@ -1,7 +1,6 @@
 package blocks
 
 import (
-  //"fmt"
 )
 
 type DiffLine struct {
@@ -32,7 +31,7 @@ func (b *DiffLine) Update() {
 	b.out = b.in
 }
 
-func DiffLineConstructor(words []string) Block {
+func DiffLineConstructor(name string, words []string) Block {
 	b0 := words[0:2]
 	b1 := words[2]
 

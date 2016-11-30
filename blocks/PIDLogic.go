@@ -55,7 +55,7 @@ func (b *PIDLogic) Update() {
 	b.tPrev = t
 }
 
-func PIDLogicConstructor(words []string) Block {
+func PIDLogicConstructor(name string, words []string) Block {
 	kp, _ := strconv.ParseFloat(words[0], 64)
 	ki, _ := strconv.ParseFloat(words[1], 64)
 	kd, _ := strconv.ParseFloat(words[2], 64)

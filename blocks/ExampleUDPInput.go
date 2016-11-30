@@ -48,7 +48,7 @@ func (b *ExampleUDPInput) Update() {
 	return
 }
 
-func ExampleUDPInputConstructor(words []string) Block {
+func ExampleUDPInputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	dataConvType := words[1]
 	recordIds := words[2:]

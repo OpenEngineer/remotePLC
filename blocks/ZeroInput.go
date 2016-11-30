@@ -9,7 +9,7 @@ func (b *ZeroInput) Update() {
 	b.in = b.out
 }
 
-func ZeroInputConstructor(words []string) Block {
+func ZeroInputConstructor(name string, words []string) Block {
 	b := &ZeroInput{}
 	return b
 }

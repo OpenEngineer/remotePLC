@@ -20,7 +20,7 @@ func (b *TimeStop) Update() {
 	}
 }
 
-func TimeStopConstructor(words []string) Block {
+func TimeStopConstructor(name string, words []string) Block {
 	d, err := time.ParseDuration(words[0])
 	if err != nil {
 		log.Fatal("in TimeStopConstructor, \"", words[0], "\", ", err)

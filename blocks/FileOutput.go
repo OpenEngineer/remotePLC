@@ -15,7 +15,7 @@ func (b *FileOutput) Update() {
 	}
 }
 
-func FileOutputConstructor(words []string) Block {
+func FileOutputConstructor(name string, words []string) Block {
 	var file *os.File
 	if words[0] == "stdout" {
 		file = os.Stdout

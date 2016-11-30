@@ -9,19 +9,27 @@ import (
 	"time"
 )
 
-func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block, timeStep time.Duration,
+func controlLoop(inputs, outputs, logic, nodes, stoppers, lines map[string]blocks.Block, timeStep time.Duration,
 	saveInterval int) {
 	// Preprocessing step, make the orderedLines map
 	logger.EventMode = logger.FATAL
+  blocks.BlockMode = blocks.CONNECTIVITY
 	orderedLines := orderLines(lines, inputs, logic) // outputs and terminators are not needed for this
 
 	checkConnectivity(inputs, outputs, logic, lines, orderedLines) // all outputs and all logic must be connected
+  blocks.BlockMode = blocks.REGULAR
 
 	// Init the datalogging
 	dataLogger := logger.MakeDataLogger()
 
+  // Precycle the inputs at least once
+  for _, v := range inputs {
+    v.Update()
+  }
+
 	// Cycle the input updates in the background
 	logger.EventMode = logger.WARNING
+
 	cycleInputs(inputs, timeStep, 10) // same rate
 
 	// Main loop
@@ -45,14 +53,14 @@ func controlLoop(inputs, outputs, logic, stoppers, lines map[string]blocks.Block
 		cycleStoppers(stoppers)
 
 		if counter%saveInterval == 0 {
-			logData(dataLogger, inputs, outputs, logic)
+			logData(dataLogger, inputs, outputs, logic, nodes)
 			counter = 0
 		}
 		counter += 1
 	}
 
 	// also save the last time
-	logData(dataLogger, inputs, outputs, logic)
+	logData(dataLogger, inputs, outputs, logic, nodes)
 }
 
 func orderLines(lines, inputs, logic map[string]blocks.Block) []string {
@@ -150,6 +158,7 @@ func checkConnectivity(inputs, outputs, logic, lines map[string]blocks.Block, or
 
 		if len(v.Get()) == 0 {
 			logger.WriteEvent("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
+      logger.WriteEvent(k, v.Get())
 		}
 	}
 }

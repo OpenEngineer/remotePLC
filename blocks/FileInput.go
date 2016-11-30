@@ -32,7 +32,7 @@ func (b *FileInput) Update() {
 	b.in = b.out
 }
 
-func FileInputConstructor(words []string) Block {
+func FileInputConstructor(name string, words []string) Block {
 	var file *os.File
 	if words[0] == "stdin" {
 		file = os.Stdin

@@ -16,7 +16,7 @@ func (b *ForkLine) Update() {
 	b.out = b.in
 }
 
-func ForkLineConstructor(words []string) Block {
+func ForkLineConstructor(name string, words []string) Block {
 	b0 := words[0]
 	b1 := words[1:]
 

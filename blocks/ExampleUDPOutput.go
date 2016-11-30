@@ -52,7 +52,7 @@ func (b *ExampleUDPOutput) Update() {
 	return
 }
 
-func ExampleUDPOutputConstructor(words []string) Block {
+func ExampleUDPOutputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	dataConvType := words[1]
 	recordIds := words[2:]
