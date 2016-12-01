@@ -3,7 +3,7 @@ package blocks
 import (
 	"../logger/"
 	//"errors"
-	//"fmt"
+	"fmt"
 	"strconv"
 )
 
@@ -57,11 +57,12 @@ func SplitLineConstructor(name string, words []string) Block {
 
 	for _, v := range b1_ {
 		if v == "_" {
-			continue
-		}
-
-		b1 = append(b1, checkName(v))
+      b1 = append(b1, "_") // "_" carries the info about it being a throwaway variable
+		} else {
+		  b1 = append(b1, checkName(v))
+    }
 	}
+  fmt.Println(b0, b1)
 	b := &SplitLine{nf: int(nf), b0: b0, b1: b1}
 	return b
 }

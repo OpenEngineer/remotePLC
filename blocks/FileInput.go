@@ -14,6 +14,8 @@ type FileInput struct {
 	//scanner *bufio.Scanner
 }
 
+// column format is useful for reading
+// row format is useful for piping
 func (b *FileInput) Update() {
 	b.file.Seek(0, 0) // also seeks to 0 when piping stdin
 

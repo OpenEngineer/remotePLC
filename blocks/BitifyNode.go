@@ -35,7 +35,7 @@ func (b *BitifyNode) Put(x []float64) {
       v0 = 1.0
     }
 
-    b.out[0] += float64(uint(0) << uint(i))*v0
+    b.out[0] += float64(uint(1) << uint(i))*v0
   }
 }
 

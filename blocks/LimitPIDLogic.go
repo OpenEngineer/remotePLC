@@ -38,9 +38,10 @@ func (b *LimitPIDLogic) Update() {
 		for i := 0; i < numIn-numPrev; i++ {
 			b.eInt = append(b.eInt, 0.0)
 		}
-	} else if numIn < numPrev { // shorten if b.in is shorter
-		b.ePrev = b.ePrev[0:numIn]
-		b.eInt = b.eInt[0:numIn]
+    logger.WriteEvent("LimitPIDLogic.Update(): more inputs than before")
+	} else if numIn < numPrev { 
+    // don't shorten
+    logger.WriteEvent("LimitPIDLogic.Update(): less inputs than before")
 	}
 
 	// to get right size:
