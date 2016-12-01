@@ -1,9 +1,12 @@
-package blocks
+package lines
 
-import "log"
-import "regexp"
+import (
+	"../blocks/"
+	"log"
+	"regexp"
+)
 
-func RegexpLineConstructor(name string, words []string) Block {
+func RegexpLineConstructor(words []string) Line {
 	re0, err0 := regexp.Compile(words[0])
 	if err0 != nil {
 		log.Fatal("in RegexpLineConstructor(), \"", words[0], "\", ", err0)
@@ -17,7 +20,7 @@ func RegexpLineConstructor(name string, words []string) Block {
 	b1 := []string{}
 
 	// collect all the matched blocks
-	for k, _ := range Blocks {
+	for k, _ := range blocks.Blocks {
 		if re0.MatchString(k) {
 			b0 = append(b0, k)
 		}
@@ -34,9 +37,9 @@ func RegexpLineConstructor(name string, words []string) Block {
 		b0 = b0[:len(b1)]
 	}
 
-	b := &Line{b0: b0, b1: b1}
+	l := &LineData{b0: b0, b1: b1}
 
-	return b
+	return l
 }
 
 var RegexpLineConstructorOk = AddConstructor("RegexpLine", RegexpLineConstructor)

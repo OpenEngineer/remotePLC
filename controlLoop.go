@@ -2,6 +2,7 @@ package main
 
 import (
 	"./blocks/"
+	"./lines/"
 	"./logger/"
 	"log"
 	"os"
@@ -10,11 +11,13 @@ import (
 	"time"
 )
 
-func controlLoop(inputs, outputs, logic, nodes, stoppers, lines map[string]blocks.Block, timeStep time.Duration,
-	saveInterval int) {
+func controlLoop(inputs, outputs, logic, nodes, stoppers map[string]blocks.Block, timeStep time.Duration, saveInterval int) {
 	// Preprocessing step, make the orderedLines map
 	logger.EventMode = logger.FATAL
 	blocks.BlockMode = blocks.CONNECTIVITY
+
+	lines.PrepareLines(inputs, outputs, logic)
+
 	orderedLines := orderLines(lines, inputs, logic) // outputs and terminators are not needed for this
 
 	checkConnectivity(inputs, outputs, logic, lines, orderedLines) // all outputs and all logic must be connected

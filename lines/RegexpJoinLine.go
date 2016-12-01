@@ -1,27 +1,29 @@
-package blocks
+package lines
 
-import "log"
-import "regexp"
+import (
+	"log"
+	"regexp"
+)
 
-func RegexpJoinLineConstructor(name string, words []string) Block {
+func RegexpJoinLineConstructor(words []string) Line {
 	re0, err0 := regexp.Compile(words[0])
 	if err0 != nil {
 		log.Fatal("in RegexpJoinLineConstructor(), \"", words[0], "\", ", err0)
 	}
 
 	b0 := []string{}
-	b1 := checkName(words[1])
+	b1 := blocks.checkName(words[1])
 
 	// collect all the matched blocks
-	for k, _ := range Blocks {
+	for k, _ := range blocks.Blocks {
 		if re0.MatchString(k) {
 			b0 = append(b0, k)
 		}
 	}
 
-	b := &JoinLine{b0: b0, b1: b1}
+	l := &JoinLine{b0: b0, b1: []string{b1}}
 
-	return b
+	return l
 }
 
 var RegexpJoinLineConstructorOk = AddConstructor("RegexpJoinLine", RegexpJoinLineConstructor)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"./blocks/"
+	"./lines/"
 	"./logger/"
 	//"bufio"
 	"errors"
@@ -32,11 +33,11 @@ func main() {
 	logger.WriteEvent("Constructing stoppers:")
 	stoppers := blocks.ConstructAll(stoppersTable)
 	logger.WriteEvent("Construction lines:")
-	lines := blocks.ConstructAll(lineTable)
+	lines.ConstructAll(lineTable)
 
 	// TODO: add loop time parameters
 	logger.EventMode = logger.WARNING
-	controlLoop(inputs, outputs, logic, nodes, stoppers, lines, timeStep, saveInterval)
+	controlLoop(inputs, outputs, logic, nodes, stoppers, timeStep, saveInterval)
 }
 
 func readConfig() (inputTable, outputTable, logicTable, nodeTable, stopTable, lineTable [][]string,
