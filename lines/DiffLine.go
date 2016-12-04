@@ -9,9 +9,9 @@ type DiffLine struct {
 	LineData
 }
 
-func (l *DiffLine) Transfer() {
-	x := blocks.Blocks[l.b0[0]].Get()
-	y := blocks.Blocks[l.b0[1]].Get()
+func (l *DiffLine) transfer() {
+	x := l.b0[0].Get()
+	y := l.b0[1].Get()
 
 	var n int
 	if len(x) < len(y) {
@@ -25,14 +25,21 @@ func (l *DiffLine) Transfer() {
 		d = append(d, y[i]-x[i])
 	}
 
-	blocks.Blocks[l.b1[0]].Put(d)
+	l.b1[0].Put(d)
 }
 
-func DiffLineConstructor(words []string) Line {
-	b0 := blocks.checkNames(words[0:2])
-	b1 := blocks.checkName(words[2])
+func DiffLineConstructor(words []string, b map[string]blocks.Block) Line {
+	b0 := getBlocks(b, words[0:2])
+	b1 := getBlock(b, words[2])
 
-	l := &DiffLine{b0: b0, b1: []string{b1}}
+	l := &DiffLine{
+		LineData{
+			b0:        b0,
+			b1:        []blocks.Block{b1},
+			DebugName: getDebugName("DiffLine", words),
+		},
+	}
+
 	return l
 }
 

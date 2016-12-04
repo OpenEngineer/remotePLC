@@ -8,20 +8,27 @@ type JoinLine struct {
 	LineData
 }
 
-func (l *JoinLine) Transfer() {
+func (l *JoinLine) transfer() {
 	x := []float64{}
 
 	for _, v := range l.b0 {
-		x = append(x, blocks.Blocks[v].Get()...)
+		x = append(x, v.Get()...)
 	}
-	blocks.Blocks[l.b1[0]].Put(x)
+	l.b1[0].Put(x)
 }
 
-func JoinLineConstructor(words []string) Line {
-	b0 := blocks.checkNames(words[1:])
-	b1 := blocks.checkName(words[0])
+func JoinLineConstructor(words []string, b map[string]blocks.Block) Line {
+	b0 := getBlocks(b, words[1:])
+	b1 := getBlock(b, words[0])
 
-	l := &JoinLine{b0: b0, b1: []string{b1}}
+	l := &JoinLine{
+		LineData{
+			b0:        b0,
+			b1:        []blocks.Block{b1},
+			DebugName: getDebugName("JoinLine", words),
+		},
+	}
+
 	return l
 }
 

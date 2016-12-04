@@ -1,9 +1,9 @@
 package logger
 
 import (
-  "fmt"
-  "log"
-  "os"
+	"fmt"
+	"log"
+	"os"
 )
 
 type EventModeType int
@@ -37,12 +37,12 @@ func WriteEvent(s ...interface{}) {
 			events = createEventLogger()
 		}
 
-    if EventMode == WARNING {
-		  events.Print(s...)
-    } else if EventMode == FATAL {
-      fmt.Println(s...)
-		  events.Print(s...)
-    } else {
+		if EventMode == WARNING {
+			events.Print(s...)
+		} else if EventMode == FATAL {
+			fmt.Println(s...)
+			events.Print(s...)
+		} else {
 			// TODO: make redundant by using fixed set commands for EventMode
 			log.Fatal("event mode not recognized")
 		}
@@ -66,4 +66,8 @@ func WriteError(context string, err error) {
 			log.Fatal("event mode not recognized")
 		}
 	}
+}
+
+func WriteFatal(context string, err error) {
+	log.Fatal(context+", ", err)
 }

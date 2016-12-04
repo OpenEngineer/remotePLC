@@ -2,156 +2,132 @@ package lines
 
 import (
 	"../blocks/"
+	"../logger/"
+	"log"
+	"regexp"
 )
 
-type Line interface {
-	Transfer()
-}
-
 type LineData struct {
-	b0 []string
-	b1 []string
+	b0 []blocks.Block
+	b1 []blocks.Block
+
+	n0        []int
+	DebugName string
 }
 
-var Lines []Line // TODO: or map?
+type Line interface {
+	Transfer() // safe transfer
+	Count() (int, int)
+	check() bool
+	transfer() // unsafe tranfer
+}
 
-var Constructors = make(map[string]func([]string) Line)
+func (l *LineData) Transfer() {
+	if l.check() {
+		l.transfer()
+	}
+}
 
-func AddConstructor(key string, fn func([]string) Line) bool {
+// count the number of input float64s
+func (l *LineData) Count() (int, int) {
+	sumOld := 0
+	for _, v := range l.n0 {
+		sumOld += v
+	}
+
+	newLen := make([]int, len(l.b0))
+
+	sumNew := 0
+	for i := 0; i < len(l.b0); i++ {
+		newLen[i] = len(l.b0[i].Get())
+		sumNew += newLen[i]
+	}
+
+	l.n0 = newLen
+
+	return sumNew, sumNew - sumOld
+}
+
+func (l *LineData) check() bool {
+	ok := true
+	for i, b := range l.b0 {
+		if l.n0[i] != len(b.Get()) {
+			ok = false
+		}
+	}
+
+	if !ok {
+		logger.WriteEvent(l.DebugName + ": num inputs not ok")
+	}
+
+	return ok
+}
+
+var Constructors = make(map[string](func([]string, map[string]blocks.Block) Line))
+
+func AddConstructor(key string, fn func([]string, map[string]blocks.Block) Line) bool {
 	Constructors[key] = fn
 	return true
 }
 
-func Construct(constructorType string, words []string) Line {
+func Construct(constructorType string, words []string,
+	b map[string]blocks.Block) Line {
 	var l Line
 	if constructor, ok := Constructors[constructorType]; ok {
-		l = constructor(words)
+		l = constructor(words, b)
 	} else {
 		log.Fatal("invalid line constructor: ", constructorType)
 	}
 	return l
 }
 
-func ConstructGlobal(words []string) Line {
-	defer logger.WriteEvent("constructed line: ", words)
-	l := Construct(words[0], words[1:])
-	Lines = append(Lines, l)
-	return l
-}
-
-func ConstructAll(wordsTable [][]string) []Line {
+func ConstructAll(wordsTable [][]string, b map[string]blocks.Block) []Line {
 	lines := []Line{}
 
 	for _, words := range wordsTable {
-		lines = append(lines, ConstructGlobal(words))
+		lines = append(lines, Construct(words[0], words[1:], b))
 	}
 
 	return lines
 }
 
-func PrepareLines(inputs, outputs, logic map[string]blocks.Block) {
-	blocks.BlockMode = blocks.CONNECTIVITY
-	orderLines(inputs, logic)
+func getBlock(bMap map[string]blocks.Block, name string) blocks.Block {
+	b, ok := bMap[name]
 
-	checkConnectivity(inputs, outputs, logic)
-	blocks.BlockMode = blocks.REGULAR
+	if !ok {
+		log.Fatal("couldn't find block ", name)
+	}
+
+	return b
 }
 
-func orderLines(inputs, logic map[string]blocks.Block) {
-
-	// Initialize a counting data structure
-	numLines := len(Lines)
-	count := make(map[int][]int)
-	for i, _ := range Lines {
-		count[i] = make([]int, numLines+1)
+func getBlocks(bMap map[string]blocks.Block, names []string) (bs []blocks.Block) {
+	for _, name := range names {
+		b := getBlock(bMap, name)
+		bs = append(bs, b)
 	}
 
-	// Initialize the inputs
-	for _, v := range inputs {
-		v.Put([]float64{1})
-	}
-
-	// Initialize the logic and do the logic
-	for _, v := range logic {
-		v.Put([]float64{1})
-		v.Update()
-	}
-
-	// Run each of the lines "numLines+1" times
-	for i := 0; i < numLines+1; i++ {
-		for j, v := range Lines {
-			v.Transfer()
-			count[j][i] = len(v.Get()) // TODO: figure this out
-		}
-	}
-
-	// List the lines that complete at each level
-	complete := make([][]int, numLines)
-	for i, _ := range Lines {
-		for j := 0; j < numLines; j++ {
-			if count[i][j] == count[i][j+1] {
-				complete[j] = append(complete[j], i)
-				break
-			}
-
-			if j == numLines {
-				log.Fatal("in orderLines(), \"", i, "\", error: circularity detected")
-			}
-		}
-	}
-
-	// Flatten this list to create the final order
-	orderedLines := []Line{}
-	for _, v := range complete {
-		for _, w := range v {
-			orderedLines = append(orderedLines, Lines[v])
-		}
-	}
-
-	if len(orderedLines) != len(Lines) {
-		log.Fatal("in orderLines(), error: orderedLined not of same length as lines, \"", orderedLines, "\" vs \"", Lines, "\"")
-	}
-
-	Lines = orderedLines[:]
+	return
 }
 
-func checkConnectivity(inputs, outputs, logic map[string]blocks.Block) {
-	// Initialize the inputs
-	for _, v := range inputs {
-		v.Put([]float64{1})
-	}
-
-	// Initialize the outputs
-	for _, v := range outputs {
-		v.Put([]float64{})
-	}
-
-	// Initialize the logic and do the logic, and then reset
-	for _, v := range logic {
-		v.Put([]float64{1})
-		v.Update()
-		v.Put([]float64{})
-	}
-
-	// Update the lines
-	for _, l := range Lines {
-		l.Transfer() // should fix the nodes
-	}
-
-	// Check bad outputs
-	for k, v := range outputs {
-		if len(v.Get()) == 0 {
-			log.Fatal("in checkConnectivity(), output \"", k, "\", error: bad connectivity")
+func getRegexpBlocks(bMap map[string]blocks.Block, reStr string) (bs []blocks.Block, names []string) {
+	re, err := regexp.Compile(reStr)
+	logger.WriteFatal("getRegexpBlocks()", err)
+	for name, b := range bMap {
+		if re.MatchString(name) {
+			bs = append(bs, b)
+			names = append(names, name)
 		}
 	}
 
-	// not necessarily fatal: TODO: distinction between logic and nodes
-	for k, v := range logic {
-		v.Update()
+	return
+}
+func getDebugName(lineType string, arguments []string) string {
+	debugName := lineType
 
-		if len(v.Get()) == 0 {
-			logger.WriteEvent("in checkConnectivity(), logic \"", k, "\", error: bad connectivity")
-			logger.WriteEvent(k, v.Get())
-		}
+	for _, a := range arguments {
+		debugName = debugName + "_" + a
 	}
+
+	return debugName
 }

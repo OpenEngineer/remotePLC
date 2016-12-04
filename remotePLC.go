@@ -1,175 +1,96 @@
 package main
 
 import (
-	"./blocks/"
-	"./lines/"
+	"./graph/"
 	"./logger/"
-	//"bufio"
+	"./parser/"
 	"errors"
 	"flag"
-	"os"
-	"regexp"
-	"strings"
 	"time"
 )
 
 const (
 	COMMENT_CHAR       = "#"
 	EXTRA_NEWLINE_CHAR = ";"
+	LOG_REGEXP         = ".*[^_]$"
 )
 
 func main() {
 	logger.EventMode = logger.FATAL
-	inputTable, outputTable, logicTable, nodeTable, stoppersTable, lineTable, timeStep, saveInterval := readConfig()
+	cmdString, fname, timeStep, saveInterval := parseArgs()
 
-	logger.WriteEvent("Constructing inputs:")
-	inputs := blocks.ConstructAll(inputTable)
-	logger.WriteEvent("Construcing outputs:")
-	outputs := blocks.ConstructAll(outputTable)
-	logger.WriteEvent("Constructing logic:")
-	logic := blocks.ConstructAll(logicTable)
-	logger.WriteEvent("Constructing nodes:")
-	nodes := blocks.ConstructAll(nodeTable)
-	logger.WriteEvent("Constructing stoppers:")
-	stoppers := blocks.ConstructAll(stoppersTable)
-	logger.WriteEvent("Construction lines:")
-	lines.ConstructAll(lineTable)
+	blockTable, lineTable := readTables(cmdString, fname)
 
-	// TODO: add loop time parameters
+	g := graph.ConstructGraph(blockTable, lineTable,
+		[]string{"inputs"}, []string{"logic"})
+
 	logger.EventMode = logger.WARNING
-	controlLoop(inputs, outputs, logic, nodes, stoppers, timeStep, saveInterval)
+
+	controlLoop(g, timeStep, saveInterval, LOG_REGEXP)
 }
 
-func readConfig() (inputTable, outputTable, logicTable, nodeTable, stopTable, lineTable [][]string,
-	timeStep time.Duration, saveInterval int) {
-	// Compile the flags
-	cmdString := flag.String("c", "", "blocks semicolon separated, appended to list of blocks")
-	fname := flag.String("f", "blocks.cfg", "file with list of blocks (default: blocks.cfg)")
+func parseArgs() (cmdString, fname string, timeStep time.Duration, saveInterval int) {
+	// compile the flags
+	cmdStringPtr := flag.String("c", "", "blocks semicolon separated, appended to list of blocks")
+	fnamePtr := flag.String("f", "blocks.cfg", "file with list of blocks (default: blocks.cfg)")
 	t := flag.String("t", "250ms", "length of cycle in [ms]")
 	s := flag.Int("s", 4, "save interval in number of cycles")
 
 	// TODO: add more flags
 	flag.Parse()
 
-	// now read the files
-	blockTable := readFileTable(*fname)
-	blockTable = append(blockTable, readStringTable(*cmdString)...)
-
-	// create the sub tables, and leave the remainder in the block table
-	inputTable = filterTable(&blockTable, ".*Input$")
-	outputTable = filterTable(&blockTable, ".*Output$")
-	logicTable = filterTable(&blockTable, ".*Logic$")
-	nodeTable = filterTable(&blockTable, ".*Node$")
-	lineTable = filterTable(&blockTable, ".*Line$")
-	stopTable = filterTable(&blockTable, ".*Stop$")
-
-	// if the blockTable isnt empty now, then there is a problem
-	for _, record := range blockTable {
-		logger.WriteError("readConfig()",
-			errors.New("unknown block type: "+record[1]))
-	}
+	// convert to correct datatypes
+	cmdString = *cmdStringPtr
+	fname = *fnamePtr
 
 	var timeErr error
 	timeStep, timeErr = time.ParseDuration(*t)
-	logger.WriteError("readConfig()", timeErr)
+	logger.WriteError("parseArgs()", timeErr)
 
 	saveInterval = *s
 
 	return
 }
 
-func filterTable(tableIn *[][]string, typeRegexp string) (tableOut [][]string) {
-	re := regexp.MustCompile(typeRegexp)
+func readTables(cmdString, fname string) (groupedBlockTable map[string]([][]string), lineTable [][]string) {
 
-	var tmpTable [][]string
-	for _, record := range *tableIn {
-		if re.MatchString(record[1]) {
-			tableOut = append(tableOut, record)
-		} else {
-			tmpTable = append(tmpTable, record)
-		}
-	}
+	var t_ parser.ConstructorTable
+	t := &t_
 
-	*tableIn = tmpTable
+	t.ReadAppendFile(fname, []string{"\n", ";"})
+	t.ReadAppendString(cmdString, []string{"\n", ";"})
 
-	return
-}
+	// add or replace
+	t.MergeRows("\\")
+	t.WordToLine("|")
+	t.SubstituteSingleWordLine("|", [][]int{
+		[]int{0, 0},
+		[]int{-1, 0}, // name of previous block
+		[]int{1, 0},  // name of next block
+	}, []string{"Line"})
+	t.AddRow([]string{"_", "Node"})
+	t.GenerateMissingNames(0, ".*Line$")
 
-func readFileTable(fname string) (table [][]string) {
-	file, err := os.Open(fname)
-	defer file.Close()
-	logger.WriteError("readFileTable()", err)
+	// clean
+	t.RemoveComments("#")
+	t.RemoveEmptyRows(0)
+	t.CorrectSuffixes("_", 2)
+	t.DetectDuplicates(0)
 
-	// get the size of the file
-	finfo, errStat := os.Stat(fname)
-	logger.WriteError("readFileTable()", errStat)
+	// create the sub tables, and leave the remainder in the block table
+	groupedBlockTable["inputs"] = t.FilterTable(1, ".*Input$")
+	groupedBlockTable["outputs"] = t.FilterTable(1, ".*Output$")
+	groupedBlockTable["logic"] = t.FilterTable(1, ".*Logic$")
+	groupedBlockTable["nodes"] = t.FilterTable(1, ".*Node$")
+	groupedBlockTable["stops"] = t.FilterTable(1, ".*Stop$")
 
-	fileBytes := make([]byte, int(finfo.Size()))
+	lineTable = t.FilterTable(1, ".*Line$")
 
-	// read the whole file into memory
-	_, errRead := file.Read(fileBytes)
-	logger.WriteError("readFileTable()", errRead)
-
-	// now process the string with the lower level readStringTable() function
-	table = readStringTable(string(fileBytes))
-
-	return
-}
-
-func readStringTable(str string) (table [][]string) {
-	// first split by newline
-	split0 := strings.Split(str, "\n")
-
-	// then loop these and split by semicolon
-	var split1 [][]string
-	for _, s := range split0 {
-		split1 = append(split1, strings.Split(s, EXTRA_NEWLINE_CHAR))
-	}
-
-	// Now flatten the first dimension (so that lines split by "\n" and ";" become equivalent)
-	var split2 []string
-	for _, s := range split1 {
-		split2 = append(split2, s...)
-	}
-
-	// now split each line-string into its words
-	for _, s := range split2 {
-		table = append(table, strings.Fields(s))
-	}
-
-	table = cleanTable(table)
-
-	return
-}
-
-func cleanTable(table [][]string) [][]string {
-	table = removeComments(table)
-	table = removeEmptyRows(table)
-
-	return table
-}
-
-func removeComments(table [][]string) (tableOut [][]string) {
-	for _, row := range table {
-		rowOut := []string{}
-		for _, word := range row {
-			if string(word[0]) == COMMENT_CHAR {
-				break
-			}
-			rowOut = append(rowOut, word)
-		}
-
-		tableOut = append(tableOut, rowOut)
-	}
-
-	return
-}
-
-func removeEmptyRows(table [][]string) (tableOut [][]string) {
-	for _, row := range table {
-		if len(row) > 0 {
-			tableOut = append(tableOut, row)
-		}
+	// if the constructorTable isnt empty now, then there is a problem
+	// TODO: function in parser
+	for _, row := range *t {
+		logger.WriteError("readTables()",
+			errors.New("unknown block type: "+row[1]))
 	}
 
 	return

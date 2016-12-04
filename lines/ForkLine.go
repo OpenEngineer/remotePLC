@@ -8,19 +8,25 @@ type ForkLine struct {
 	LineData
 }
 
-func (l *ForkLine) Transfer() {
-	x := blocks.Blocks[l.b0[0]].Get()
+func (l *ForkLine) transfer() {
+	x := l.b0[0].Get()
 
 	for _, v := range l.b1 {
-		blocks.Blocks[v].Put(x)
+		v.Put(x)
 	}
 }
 
-func ForkLineConstructor(words []string) Line {
-	b0 := blocks.checkName(words[0])
-	b1 := blocks.checkNames(words[1:])
+func ForkLineConstructor(words []string, b map[string]blocks.Block) Line {
+	b0 := getBlock(b, words[0])
+	b1 := getBlocks(b, words[1:])
 
-	l := &ForkLine{b0: []string{b0}, b1: b1}
+	l := &ForkLine{
+		LineData{
+			b0:        []blocks.Block{b0},
+			b1:        b1,
+			DebugName: getDebugName("ForkLine", words),
+		},
+	}
 	return l
 }
 
