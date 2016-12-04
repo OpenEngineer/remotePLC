@@ -6,13 +6,17 @@ import (
 	"./parser/"
 	"errors"
 	"flag"
+	//"fmt"
 	"time"
 )
 
 const (
 	COMMENT_CHAR       = "#"
 	EXTRA_NEWLINE_CHAR = ";"
+	HIDE_CHAR          = "_"
 	LOG_REGEXP         = ".*[^_]$"
+	PIPE_CHAR          = "|"
+	MERGE_CHAR         = "\\"
 )
 
 func main() {
@@ -22,7 +26,7 @@ func main() {
 	blockTable, lineTable := readTables(cmdString, fname)
 
 	g := graph.ConstructGraph(blockTable, lineTable,
-		[]string{"inputs"}, []string{"logic"})
+		[]string{"inputs"}, []string{"logic"}, []string{"outputs"})
 
 	logger.EventMode = logger.WARNING
 
@@ -52,31 +56,33 @@ func parseArgs() (cmdString, fname string, timeStep time.Duration, saveInterval 
 	return
 }
 
-func readTables(cmdString, fname string) (groupedBlockTable map[string]([][]string), lineTable [][]string) {
+func readTables(cmdString, fname string) (map[string][][]string, [][]string) {
 
 	var t_ parser.ConstructorTable
 	t := &t_
 
-	t.ReadAppendFile(fname, []string{"\n", ";"})
-	t.ReadAppendString(cmdString, []string{"\n", ";"})
+	t.ReadAppendFile(fname, []string{"\n", EXTRA_NEWLINE_CHAR})
+	t.ReadAppendString(cmdString, []string{"\n", EXTRA_NEWLINE_CHAR})
 
-	// add or replace
-	t.MergeRows("\\")
-	t.WordToLine("|")
-	t.SubstituteSingleWordLine("|", [][]int{
+	t.RemoveComments(COMMENT_CHAR)
+	t.RemoveEmptyRows(1)
+	t.MergeRows(MERGE_CHAR)
+	t.WordToLine(PIPE_CHAR)
+	t.SubstituteSingleWordLine(PIPE_CHAR, [][]int{
 		[]int{0, 0},
 		[]int{-1, 0}, // name of previous block
 		[]int{1, 0},  // name of next block
 	}, []string{"Line"})
-	t.AddRow([]string{"_", "Node"})
-	t.GenerateMissingNames(0, ".*Line$")
+	t.GenerateMissingNames(0, ".*Line$", HIDE_CHAR)
 
 	// clean
-	t.RemoveComments("#")
-	t.RemoveEmptyRows(0)
-	t.CorrectSuffixes("_", 2)
 	t.DetectDuplicates(0)
+	t.CorrectSuffixes(HIDE_CHAR, 2)
+	if t.ContainsWord(HIDE_CHAR, 2) {
+		t.AddRow([]string{HIDE_CHAR, "Node"})
+	}
 
+	groupedBlockTable := make(map[string][][]string)
 	// create the sub tables, and leave the remainder in the block table
 	groupedBlockTable["inputs"] = t.FilterTable(1, ".*Input$")
 	groupedBlockTable["outputs"] = t.FilterTable(1, ".*Output$")
@@ -84,7 +90,7 @@ func readTables(cmdString, fname string) (groupedBlockTable map[string]([][]stri
 	groupedBlockTable["nodes"] = t.FilterTable(1, ".*Node$")
 	groupedBlockTable["stops"] = t.FilterTable(1, ".*Stop$")
 
-	lineTable = t.FilterTable(1, ".*Line$")
+	lineTable := t.FilterTable(1, ".*Line$")
 
 	// if the constructorTable isnt empty now, then there is a problem
 	// TODO: function in parser
@@ -93,5 +99,5 @@ func readTables(cmdString, fname string) (groupedBlockTable map[string]([][]stri
 			errors.New("unknown block type: "+row[1]))
 	}
 
-	return
+	return groupedBlockTable, lineTable
 }

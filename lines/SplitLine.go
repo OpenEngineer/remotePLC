@@ -34,7 +34,7 @@ func (l *SplitLine) transfer() {
 	}
 }
 
-func SplitLineConstructor(words []string, b map[string]blocks.Block) Line {
+func SplitLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	nf, errInt := strconv.ParseInt(words[0], 10, 64)
 	logger.WriteError("SplitLineConstructor()", errInt)
 
@@ -45,7 +45,7 @@ func SplitLineConstructor(words []string, b map[string]blocks.Block) Line {
 		LineData: LineData{
 			b0:        []blocks.Block{b0},
 			b1:        b1,
-			DebugName: getDebugName("SplitLine", words),
+			DebugName: name,
 		},
 		nf: int(nf),
 	}

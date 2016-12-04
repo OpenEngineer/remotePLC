@@ -4,7 +4,7 @@ import (
 	"../blocks/"
 )
 
-func RegexpJoinLineConstructor(words []string, b map[string]blocks.Block) Line {
+func RegexpJoinLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	b0, _ := getRegexpBlocks(b, words[0])
 	b1 := getBlock(b, words[1])
 
@@ -12,7 +12,7 @@ func RegexpJoinLineConstructor(words []string, b map[string]blocks.Block) Line {
 		LineData{
 			b0:        b0,
 			b1:        []blocks.Block{b1},
-			DebugName: getDebugName("RegexpJoinLine", words),
+			DebugName: name,
 		},
 	}
 

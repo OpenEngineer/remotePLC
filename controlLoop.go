@@ -8,15 +8,16 @@ import (
 	"time"
 )
 
-const logRegexp string = ".*[^_]$"
-
 func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 	logRegexp string) {
+	logger.WriteEvent("starting input loop...")
 	g.CycleInfinite([]string{"inputs"}, timeStep, 10) // same rate as main loop
+	logger.WriteEvent("starting input loop ok")
 
 	// Main loop
 	ticker := time.NewTicker(timeStep)
 	counter := 0
+	logger.WriteEvent("entering control loop...")
 	for {
 		<-ticker.C
 
@@ -28,6 +29,7 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 
 		g.CycleParallel([]string{"outputs"})
 
+		g.CycleSerial([]string{"stops"})
 		checkStops(g)
 
 		if counter%saveInterval == 0 {

@@ -56,8 +56,8 @@ func (g *sortGraph) Swap(i, j int) {
 }
 
 func (g *sortGraph) CountLineData() {
-	for i, l := range g.l {
-		sum, diff := l.Count()
+	for i, _ := range g.l {
+		sum, diff := g.l[i].Count()
 
 		g.sum[i] = sum
 		g.diff[i] = diff
@@ -69,19 +69,20 @@ func (g *Graph) sortLines(startBlocks, middleBlocks []string) {
 
 	s := &sortGraph{
 		Graph: Graph{
-			l: g.l, // should be a reference
+			b: g.b,
+			l: g.l,
 		},
 		sum:  make([]int, numLines),
 		diff: make([]int, numLines),
 	}
 
-	g.ClearAll()
+	s.ClearAll()
 
-	g.CycleParallel(startBlocks)
+	s.CycleParallel(startBlocks)
 
 	for i := 0; i < numLines+1; i++ {
 		// update the inputs and the logic
-		g.CycleSerial(middleBlocks)
+		s.CycleSerial(middleBlocks)
 
 		// count
 		s.CountLineData()
@@ -93,6 +94,8 @@ func (g *Graph) sortLines(startBlocks, middleBlocks []string) {
 		sort.Stable(s)
 
 		// transfer data before repeating order loop
-		g.CycleLines()
+		s.CycleLines()
 	}
+
+	g.l = s.l
 }

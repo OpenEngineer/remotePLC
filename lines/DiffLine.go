@@ -28,7 +28,7 @@ func (l *DiffLine) transfer() {
 	l.b1[0].Put(d)
 }
 
-func DiffLineConstructor(words []string, b map[string]blocks.Block) Line {
+func DiffLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	b0 := getBlocks(b, words[0:2])
 	b1 := getBlock(b, words[2])
 
@@ -36,7 +36,7 @@ func DiffLineConstructor(words []string, b map[string]blocks.Block) Line {
 		LineData{
 			b0:        b0,
 			b1:        []blocks.Block{b1},
-			DebugName: getDebugName("DiffLine", words),
+			DebugName: name,
 		},
 	}
 

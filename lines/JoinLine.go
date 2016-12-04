@@ -17,7 +17,7 @@ func (l *JoinLine) transfer() {
 	l.b1[0].Put(x)
 }
 
-func JoinLineConstructor(words []string, b map[string]blocks.Block) Line {
+func JoinLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	b0 := getBlocks(b, words[1:])
 	b1 := getBlock(b, words[0])
 
@@ -25,7 +25,7 @@ func JoinLineConstructor(words []string, b map[string]blocks.Block) Line {
 		LineData{
 			b0:        b0,
 			b1:        []blocks.Block{b1},
-			DebugName: getDebugName("JoinLine", words),
+			DebugName: name,
 		},
 	}
 

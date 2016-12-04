@@ -61,10 +61,10 @@ func AddConstructor(key string, fn func(string, []string) Block) bool {
 	return true
 }
 
-func Construct(name string, constructorType string, words []string) Block {
+func Construct(name string, constructorType string, args []string) Block {
 	var b Block
 	if constructor, ok := Constructors[constructorType]; ok {
-		b = constructor(name, words)
+		b = constructor(name, args)
 	} else {
 		log.Fatal("invalid block constructor: ", constructorType)
 	}

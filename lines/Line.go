@@ -13,7 +13,7 @@ func (l *LineData) transfer() {
 	}
 }
 
-func LineConstructor(words []string, b map[string]blocks.Block) Line {
+func LineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	if len(words)%2 == 1 {
 		log.Fatal("in LineConstructor, ", words, ",error: unpaired lines")
 	}
@@ -28,7 +28,7 @@ func LineConstructor(words []string, b map[string]blocks.Block) Line {
 	l := &LineData{
 		b0:        b0,
 		b1:        b1,
-		DebugName: getDebugName("Line", words),
+		DebugName: name,
 	}
 	return l
 }

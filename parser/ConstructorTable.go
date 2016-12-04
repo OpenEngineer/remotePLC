@@ -37,7 +37,7 @@ func (t *ConstructorTable) ReadAppendString(str string, lineSeparators []string)
 	lines := []string{str}
 
 	for _, ls := range lineSeparators {
-		splitLines(lines, ls)
+		lines = splitLines(lines, ls)
 	}
 
 	// now split each line-string into its words
@@ -46,18 +46,17 @@ func (t *ConstructorTable) ReadAppendString(str string, lineSeparators []string)
 	}
 }
 
-func splitLines(lines []string, fs string) {
+func splitLines(linesIn []string, fs string) (linesOut []string) {
 	var split [][]string
-	for _, l := range lines {
+	for _, l := range linesIn {
 		split = append(split, strings.Split(l, fs))
 	}
 
-	var tmp []string
 	for _, s := range split {
-		tmp = append(tmp, s...)
+		linesOut = append(linesOut, s...)
 	}
 
-	lines = tmp
+	return
 }
 
 func (t *ConstructorTable) RemoveComments(commentChar string) {
@@ -68,7 +67,7 @@ func (t *ConstructorTable) RemoveComments(commentChar string) {
 		for _, word := range row {
 			if string(word[0]) == commentChar {
 				break
-			} else if string(word[len(word)]) == commentChar {
+			} else if string(word[len(word)-1]) == commentChar {
 				tmpRow = append(tmpRow, string(word[0:len(word)-1]))
 				break
 			} else {
@@ -112,7 +111,7 @@ func (t *ConstructorTable) FilterTable(colI int, regexpStr string) (tableOut [][
 	return
 }
 
-func (t *ConstructorTable) GenerateMissingNames(colI int, regexpStr string) {
+func (t *ConstructorTable) GenerateMissingNames(colI int, regexpStr string, suffix string) {
 	re := regexp.MustCompile(regexpStr)
 
 	var tmpTable [][]string
@@ -120,14 +119,16 @@ func (t *ConstructorTable) GenerateMissingNames(colI int, regexpStr string) {
 	for _, row := range *t {
 		var tmpRow []string
 		if re.MatchString(row[colI]) {
-			tmpRow = []string{slugify(row)}
+			tmpRow = []string{slugify(row) + suffix}
 			tmpRow = append(tmpRow, row...)
 		} else {
 			tmpRow = row
 		}
 
-		tmpTable = append(tmpTable, row)
+		tmpTable = append(tmpTable, tmpRow)
 	}
+
+	*t = tmpTable
 }
 
 func slugify(words []string) string {
@@ -149,7 +150,7 @@ func (t *ConstructorTable) MergeRows(mergeChar string) {
 
 	var tmpRow []string
 	for i, row := range *t {
-		if row[len(row)-1] == mergeChar {
+		if len(row) > 0 && row[len(row)-1] == mergeChar {
 			if i == len(*t)-1 {
 				logger.WriteFatal("MergeRows()", errors.New("last row contains the mergeChar \""+mergeChar+"\", this is illegal"))
 			}
@@ -177,7 +178,7 @@ func (t *ConstructorTable) CorrectSuffixes(suffix string, colI int) {
 
 	// record all the names:
 	var altNames []string
-	var names map[string]string
+	names := make(map[string]string)
 
 	for _, row := range *t {
 		name := row[0]
@@ -202,7 +203,7 @@ func (t *ConstructorTable) CorrectSuffixes(suffix string, colI int) {
 		for j := colI; j < len(row); j++ {
 			k := sort.SearchStrings(altNames, row[j])
 
-			if k < len(altNames) {
+			if k < len(altNames) && altNames[k] == row[j] {
 				altName := altNames[k]
 				tmpRow[j] = names[altName]
 			}
@@ -262,7 +263,7 @@ func (t *ConstructorTable) SubstituteSingleWordLine(matchWord string, wordI [][]
 }
 
 func (t *ConstructorTable) DetectDuplicates(colI int) {
-	var nameI map[string]int
+	nameI := make(map[string]int)
 
 	var tmpTable [][]string
 	tmpTable = *t
@@ -275,4 +276,23 @@ func (t *ConstructorTable) DetectDuplicates(colI int) {
 			nameI[name] = i
 		}
 	}
+}
+
+func (t *ConstructorTable) ContainsWord(matchWord string, colI int) bool {
+	b := false
+
+	for _, row := range *t {
+		for i := colI; i < len(row); i++ {
+			if row[i] == matchWord {
+				b = true
+				break
+			}
+		}
+
+		if b {
+			break
+		}
+	}
+
+	return b
 }

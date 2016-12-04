@@ -3,6 +3,7 @@ package lines
 import (
 	"../blocks/"
 	"../logger/"
+	"fmt"
 	"log"
 	"regexp"
 )
@@ -20,12 +21,17 @@ type Line interface {
 	Count() (int, int)
 	check() bool
 	transfer() // unsafe tranfer
+	Info()
 }
 
 func (l *LineData) Transfer() {
 	if l.check() {
 		l.transfer()
 	}
+}
+
+func (l *LineData) Info() {
+	fmt.Println(l.DebugName, ": ", l.n0)
 }
 
 // count the number of input float64s
@@ -50,31 +56,36 @@ func (l *LineData) Count() (int, int) {
 
 func (l *LineData) check() bool {
 	ok := true
+	var expected int
+	var actual int
 	for i, b := range l.b0 {
 		if l.n0[i] != len(b.Get()) {
 			ok = false
+			expected = l.n0[i]
+			actual = len(b.Get())
+			break
 		}
 	}
 
 	if !ok {
-		logger.WriteEvent(l.DebugName + ": num inputs not ok")
+		logger.WriteEvent(l.DebugName+", ignoring (numInputs not ok: ", expected, " vs ", actual, ") (ignore this message during init phase)")
 	}
 
 	return ok
 }
 
-var Constructors = make(map[string](func([]string, map[string]blocks.Block) Line))
+var Constructors = make(map[string](func(string, []string, map[string]blocks.Block) Line))
 
-func AddConstructor(key string, fn func([]string, map[string]blocks.Block) Line) bool {
+func AddConstructor(key string, fn func(string, []string, map[string]blocks.Block) Line) bool {
 	Constructors[key] = fn
 	return true
 }
 
-func Construct(constructorType string, words []string,
+func Construct(name string, constructorType string, args []string,
 	b map[string]blocks.Block) Line {
 	var l Line
 	if constructor, ok := Constructors[constructorType]; ok {
-		l = constructor(words, b)
+		l = constructor(name, args, b)
 	} else {
 		log.Fatal("invalid line constructor: ", constructorType)
 	}
@@ -85,7 +96,7 @@ func ConstructAll(wordsTable [][]string, b map[string]blocks.Block) []Line {
 	lines := []Line{}
 
 	for _, words := range wordsTable {
-		lines = append(lines, Construct(words[0], words[1:], b))
+		lines = append(lines, Construct(words[0], words[1], words[2:], b))
 	}
 
 	return lines

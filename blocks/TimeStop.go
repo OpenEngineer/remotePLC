@@ -9,6 +9,8 @@ type TimeStop struct {
 	start   time.Time
 }
 
+// return a number between 0 and 1 when within time
+//  a number between -inf and -1 when out of time (same scale factor)
 func (b *TimeStop) Update() {
 	d := time.Since(b.start)
 

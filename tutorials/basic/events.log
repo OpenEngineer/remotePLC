@@ -1,17 +1,17 @@
-2016/11/30 22:59:14 Constructing inputs:
-2016/11/30 22:59:14 reading TimeFileInput file in.dat
-2016/11/30 22:59:14 constructed block: in1[TimeFileInput in.dat]
-2016/11/30 22:59:14 Construcing outputs:
-2016/11/30 22:59:14 constructed block: out1[FileOutput out.dat]
-2016/11/30 22:59:14 Constructing logic:
-2016/11/30 22:59:14 Constructing nodes:
-2016/11/30 22:59:14 constructed block: node2_[Node]
-2016/11/30 22:59:14 constructed block: delay1_[Node]
-2016/11/30 22:59:14 constructed block: node1_[Node]
-2016/11/30 22:59:14 Constructing stoppers:
-2016/11/30 22:59:14 constructed block: time_[TimeStop 10s]
-2016/11/30 22:59:14 Construction lines:
-2016/11/30 22:59:14 constructed block: line1_[Line in1 node1_]
-2016/11/30 22:59:14 constructed block: line2_[Line node1 delay1]
-2016/11/30 22:59:14 constructed block: line3_[Line delay1 node2]
-2016/11/30 22:59:14 constructed block: line4_[Line node2 out1]
+2016/12/05 00:29:15 constructing graph...
+2016/12/05 00:29:15 constructing blocks...
+2016/12/05 00:29:15 reading TimeFileInput file in.dat
+2016/12/05 00:29:15 sorting lines...
+2016/12/05 00:29:15 Line_node1_delay1_, ignoring (numInputs not ok: 0 vs 2) (ignore this message during init phase)
+2016/12/05 00:29:15 line3_, ignoring (numInputs not ok: 0 vs 2) (ignore this message during init phase)
+2016/12/05 00:29:15 line4_, ignoring (numInputs not ok: 0 vs 2) (ignore this message during init phase)
+2016/12/05 00:29:15 sorted lines as: 
+2016/12/05 00:29:15 checking connectivity...
+2016/12/05 00:29:15 connectivity ok
+2016/12/05 00:29:15 initializing block...
+2016/12/05 00:29:15 blocks initialized
+2016/12/05 00:29:15 final count...
+2016/12/05 00:29:15 final count ok
+2016/12/05 00:29:15 starting input loop...
+2016/12/05 00:29:15 starting input loop ok
+2016/12/05 00:29:15 entering control loop...

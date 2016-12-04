@@ -4,6 +4,7 @@ import (
 	"../blocks/"
 	"../lines/"
 	"../logger/"
+	"fmt"
 	"regexp"
 	"sort"
 	"time"
@@ -17,24 +18,37 @@ type Graph struct {
 }
 
 func ConstructGraph(blockTable map[string]([][]string), lineTable [][]string,
-	startBlocks, middleBlocks []string) *Graph {
+	startBlocks, middleBlocks, endBlocks []string) *Graph {
 
 	logger.WriteEvent("constructing graph...")
-	g := &Graph{}
+	g := &Graph{
+		b: make(map[string]map[string]blocks.Block),
+	}
 
+	logger.WriteEvent("constructing blocks...")
 	for k, table := range blockTable {
 		g.b[k] = blocks.ConstructAll(table)
 	}
 
 	g.l = lines.ConstructAll(lineTable, g.ungroupedBlocks())
 
+	logger.WriteEvent("sorting lines...")
+	g.LineInfo()
 	g.sortLines(startBlocks, middleBlocks)
+	logger.WriteEvent("sorted lines as: ")
+	g.LineInfo()
 
-	g.checkConnectivity(startBlocks, middleBlocks)
+	logger.WriteEvent("checking connectivity...")
+	g.checkConnectivity(startBlocks, middleBlocks, endBlocks)
+	logger.WriteEvent("connectivity ok")
 
+	logger.WriteEvent("initializing block...")
 	g.initBlocks(startBlocks, middleBlocks)
+	logger.WriteEvent("blocks initialized")
 
+	logger.WriteEvent("final count...")
 	g.CountLineData()
+	logger.WriteEvent("final count ok")
 
 	return g
 }
@@ -151,12 +165,23 @@ func (g *Graph) LogData(namesRegexp string) {
 	logger.WriteData(fields, data)
 }
 
-func (g *Graph) ungroupedBlocks() (b map[string]blocks.Block) {
+func (g *Graph) ungroupedBlocks() map[string]blocks.Block {
+	b := make(map[string]blocks.Block)
 	for _, group := range g.b {
 		for name, block := range group {
 			b[name] = block
 		}
 	}
 
-	return
+	return b
+}
+
+func (g *Graph) LineInfo() {
+	for _, l := range g.l {
+		l.Info()
+	}
+}
+
+func (g *Graph) BlockInfo(name string) {
+	fmt.Println(g.b[name])
 }

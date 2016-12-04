@@ -4,7 +4,7 @@ import (
 	"../blocks/"
 )
 
-func RegexpLineConstructor(words []string, b map[string]blocks.Block) Line {
+func RegexpLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	b0, _ := getRegexpBlocks(b, words[0])
 	b1, _ := getRegexpBlocks(b, words[1])
 
@@ -18,7 +18,7 @@ func RegexpLineConstructor(words []string, b map[string]blocks.Block) Line {
 	l := &LineData{
 		b0:        b0,
 		b1:        b1,
-		DebugName: getDebugName("RegexpLine", words),
+		DebugName: name,
 	}
 
 	return l
