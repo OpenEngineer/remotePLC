@@ -1,38 +1,60 @@
-%        File: remotePLC.tex
-%     Created: Die Nov 29 09:00  2016 C
-% Last Change: Die Nov 29 09:00  2016 C
-%
 \documentclass[a4paper]{article}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, calc, positioning}
+\tikzstyle{process} = [rectangle, minimum width=4cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+\tikzstyle{decision} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+\tikzstyle{stop} = [rectangle, minimum width=1.5cm, minimum height=1cm, text centered, draw=black, fill=red!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+\tikzstyle{line} = [draw,thick,->,-latex',>=stealth]
+
+\title{remotePLC v1.0\\User's and Programmer's Guide}
+\author{Christian A. Schmitz - christian.schmitz@telenet.be}
+
 \begin{document}
-\section{Introduction}
-This program is intended as a ``soft'' programmable PLC. I wrote it for a linux computer. It interfaces with hardware via ethernet or other IOs. The user specifies inputs and outputs in a ``blocks.cfg'' file, as well as the binding logic. The logic consists of ``lines'', ``logic''-blocks and ``node''-blocks. The user also specifies the criteria for ending the program (e.g. ``stop the program after 10min'').\\\\
-A simple example blocks.cfg can be found in tutorials/basic.
-\subsection{Background}
-I wanted a plc program I could use like a utility and in turn use in higher level programs, like eg. interfacing with Dakota in order to do complex DoEs. It was also important for me that reconfiguring the logic wouldn't require recompilation (flexibility). 
-\subsection{General structure}
-Arrays of double precision numbers are passed between the blocks via the ``lines''.
-Time loop:
-\begin{itemize}
-  \item inputs are cycled in the background (default 250ms, 10ms desyncing between each input). So the input cycle is NOT in sync with the rest of the program.
-  \item lines are updated (serially)
-  \item logic is updated (serially) 
-  \item lines are updated again (serially) , so that outputs are sure to get the needed values 
-  \item outputs are cycled (in parallel, forked and joined)
-  \item the stop criteria are cycled (serially)
-  \item data is logged
-\end{itemize}
-This is not a high performance plc program, and I'm not sure how it will behave in case of very short time loops. 1ms should be doable though, although most IO probably has higher latency.
-\subsection{Modules and Files}
-In more or less chronological call order:
-\begin{itemize}
-  \item main::remotePLC.go: parse args, read blocks, construct blocks, start controlLoop, COMMENT\_CHAR, EXTRA\_NEWLINE\_CHAR
-  \item main::controlLoop.go: order lines, check connectivity, get inputs once, start cycling inputs in background, start main time loop, log data once before exiting
-  \item main::controlLoop.go.mainTimeLoop: cycle lines, cycle logic, cycle lines, cycle outputs, cycle stoppers, logdata
-  \item blocks::blocks.go: Blocks map, constructor map, input/basic/output structs/interfaces, get blocks, add and get constructors, construct block, LogData(), BlockModeType=REGULAR,CONNECTIVITY,STRICT, HIDDEN\_SUFFIX\_CHAR
-  \item blocks::*: dynamically constructed blocks with Get(), Put(), and Update() functions
-  \item logger::eventLogger.go: EventModeType=QUIET,WARNING,FATAL, WriteEvents(), WriteError()
-  \item logger::dataLogger.go: headerPrefix, fnameFormat/regexp, maxFileSize, maxTotalSize, WriteData()
-\end{itemize}
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+\part{User's Guide}
+\section{Synopsis}
+\textit{remotePLC} is a ``soft'' PLC (Programmable Logic Controller). This means that it runs on a computer and connects to sensors and actuators via ethernet or other IOs. \textit{remotePLC} is designed as a utility to interface with the \textit{Internet-of-Things} (hence ``\textit{remote}''), although it can also interface with conventional PLC devices depending on the available IOs.\\\\
+The user specifies input blocks, logic blocks, and output blocks via command-line or a configuration file. These blocks process data in the form of arrays of double precision numbers. This data is moved between the blocks via lines, which also need to be specified by the user.\\\\
+Finally the user specifies the criteria that end the program (e.g. stop the program after 10min, or stop when certain stability conditions are reached).\\\\
+\textit{remotePLC} then reads the provided statements and constructs a graph. After connectivity checks the input blocks are launched in an infinite update loop (running in the background), and the main PLC loop is started. Figure \ref{fig:basic_flowchart} shows a flowchart of the \textit{remotePLC} processes.
+\begin{figure}
+  \center
+\begin{tikzpicture}[node distance=2cm]
+  \node (inputs) [process, xshift=-3cm, yshift=-6cm] {update inputs};
+  \path [line] (inputs.south) |- ($(inputs.south) + (2.5,-0.5)$) |- ($(inputs.north) + (2.5,0.5)$) -- ($(inputs.north) + (0.0,0.5)$) -- (inputs.north);
+
+  \node (move1) [process, xshift=3cm, yshift=0cm] {transfer data};
+
+  \node (logic) [process, xshift=3cm, yshift=-2cm] {update logic blocks};
+  \path [line] (move1) -- (logic);
+
+  \node (move2) [process, xshift=3cm, yshift=-4cm] {transfer data};
+  \path [line] (logic) -- (move2);
+
+  \node (outputs) [process, xshift=3cm, yshift=-6cm] {write/send outputs};
+  \path [line] (move2) -- (outputs);
+
+  \node (convergence) [process, align=center, xshift=3cm, yshift=-8cm] {check\\convergence/divergence};
+  \path [line] (outputs) -- (convergence);
+
+  \node (log) [process, xshift=3cm, yshift=-10cm] {log data};
+  \path [line] (convergence) -- (log);
+
+  \node (while) [decision, xshift=3cm, yshift=-12cm, align=center] {not converged AND \\not diverged};
+  \path [line] (log) -- (while);
+
+  \node (end) [stop, xshift=3cm, yshift=-14cm] {end};
+  \path [line] (while.east) -- node[anchor=south] {yes} ($(while.east) + (1.0,0.0)$) |- ($(move1.north) + (0.0, 0.5)$) -- (move1);
+  \path [line] (while) -- node[anchor=west] {no} (end);
+\end{tikzpicture}
+\caption{flowchart of the \textit{remotePLC} processes}
+\label{fig:basic_flowchart}
+\end{figure}
 \section{Block types}
 \subsection{Input types}
 \subsubsection{ConstantInput}
@@ -124,7 +146,48 @@ Does anything like this exist? (in that case: sorry for duplicating any one else
   \item semicolon parsing in blocks.cfg
 \end{itemize}
 \section{License}
-I guess MIT
+MIT, see LICENSE.txt included in source code package.
+\part{Programmer's Guide}
+\section{Background: motivation}
+I couldn't find a PLC with the following specs, and thus wrote \textit{remotePLC}:
+\begin{itemize}
+  \item FOSS
+  \item text or command-line based
+  \item no recompilation in case of a new graph
+\end{itemize}
+Each of these points is very important to me. (I leave it up to you to guess which PLC-like software does NOT have these properties and frustrated me up to the point to start writing \textit{remotePLC} in my free time).
+\subsection{FOSS}
+License fees are a pain, no matter how small. You just want to depend as little as possible on any purchase approval procedures at your company. The bureaucracy could slow you down immensely. I estimate that my (free) time spent writing the first functional version of \textit{remotePLC} is probably less than the time I would've wasted on the bureaucracy for a commercial alternative (not to mention the amount of frustration saved).
+\subsection{Text or command-line based}
+This has two advantages: automation and ssh. I can call \textit{remotePLC} from a higher level script and run the whole thing remotely on very simple computers. My original goal was actually to use \textit{Dakota} to do Designs of Experiments and run advanced optimization algorithms on a remote industrial pc.\\\\
+I guess this could be possible with commercial alternatives, but I imagine the interfacing overhead being somewhat more complex.
+\subsection{No recompilation}
+The remote industrial computers I want to run \textit{remotePLC} on might not have compilers installed. And at some point in the future I will hopefully even forget how to compile \textit{remotePLC}. So I want to avoid recompilation by providing enough flexibility through a configuration file.\\\\
+But at the same time I want to avoid that the configuration file itself becomes a meta-program, and thus non-trivial to use. This requires the right balance between the functionality of the program and the configuration file.
+\section{General structure}
+Arrays of double precision numbers are passed between the blocks via the ``lines''.
+Time loop:
+\begin{itemize}
+  \item inputs are cycled in the background (default 250ms, 10ms desyncing between each input). So the input cycle is NOT in sync with the rest of the program.
+  \item lines are updated (serially)
+  \item logic is updated (serially) 
+  \item lines are updated again (serially) , so that outputs are sure to get the needed values 
+  \item outputs are cycled (in parallel, forked and joined)
+  \item the stop criteria are cycled (serially)
+  \item data is logged
+\end{itemize}
+This is not a high performance plc program, and I'm not sure how it will behave in case of very short time loops. 1ms should be doable though, although most IO probably has higher latency.
+\subsection{Modules and Files}
+In more or less chronological call order:
+\begin{itemize}
+  \item main::remotePLC.go: parse args, read blocks, construct blocks, start controlLoop, COMMENT\_CHAR, EXTRA\_NEWLINE\_CHAR
+  \item main::controlLoop.go: order lines, check connectivity, get inputs once, start cycling inputs in background, start main time loop, log data once before exiting
+  \item main::controlLoop.go.mainTimeLoop: cycle lines, cycle logic, cycle lines, cycle outputs, cycle stoppers, logdata
+  \item blocks::blocks.go: Blocks map, constructor map, input/basic/output structs/interfaces, get blocks, add and get constructors, construct block, LogData(), BlockModeType=REGULAR,CONNECTIVITY,STRICT, HIDDEN\_SUFFIX\_CHAR
+  \item blocks::*: dynamically constructed blocks with Get(), Put(), and Update() functions
+  \item logger::eventLogger.go: EventModeType=QUIET,WARNING,FATAL, WriteEvents(), WriteError()
+  \item logger::dataLogger.go: headerPrefix, fnameFormat/regexp, maxFileSize, maxTotalSize, WriteData()
+\end{itemize}
 \end{document}
 
 
