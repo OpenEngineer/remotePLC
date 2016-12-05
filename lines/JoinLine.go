@@ -8,13 +8,15 @@ type JoinLine struct {
 	LineData
 }
 
-func (l *JoinLine) transfer() {
-	x := []float64{}
+func (l *JoinLine) Transfer() {
+  if l.check() {
+    x := []float64{}
 
-	for _, v := range l.b0 {
-		x = append(x, v.Get()...)
-	}
-	l.b1[0].Put(x)
+    for _, v := range l.b0 {
+      x = append(x, v.Get()...)
+    }
+    l.b1[0].Put(x)
+  }
 }
 
 func JoinLineConstructor(name string, words []string, b map[string]blocks.Block) Line {

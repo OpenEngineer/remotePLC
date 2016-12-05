@@ -15,10 +15,12 @@ func RegexpLineConstructor(name string, words []string, b map[string]blocks.Bloc
 		b0 = b0[:len(b1)]
 	}
 
-	l := &LineData{
-		b0:        b0,
-		b1:        b1,
-		DebugName: name,
+	l := &SimpleLine{
+    LineData{
+      b0:        b0,
+      b1:        b1,
+      DebugName: name,
+    },
 	}
 
 	return l

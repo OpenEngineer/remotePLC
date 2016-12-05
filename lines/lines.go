@@ -20,14 +20,12 @@ type Line interface {
 	Transfer() // safe transfer
 	Count() (int, int)
 	check() bool
-	transfer() // unsafe tranfer
+	//transfer() // unsafe tranfer (unexported names are not possible with subclasses)
 	Info()
 }
 
 func (l *LineData) Transfer() {
-	if l.check() {
-		l.transfer()
-	}
+  log.Fatal("transfer func must be implemented in subclass, " + l.DebugName)
 }
 
 func (l *LineData) Info() {

@@ -8,12 +8,14 @@ type ForkLine struct {
 	LineData
 }
 
-func (l *ForkLine) transfer() {
-	x := l.b0[0].Get()
+func (l *ForkLine) Transfer() {
+  if l.check() {
+    x := l.b0[0].Get()
 
-	for _, v := range l.b1 {
-		v.Put(x)
-	}
+    for _, v := range l.b1 {
+      v.Put(x)
+    }
+  }
 }
 
 func ForkLineConstructor(name string, words []string, b map[string]blocks.Block) Line {

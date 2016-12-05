@@ -9,23 +9,25 @@ type DiffLine struct {
 	LineData
 }
 
-func (l *DiffLine) transfer() {
-	x := l.b0[0].Get()
-	y := l.b0[1].Get()
+func (l *DiffLine) Transfer() {
+  if l.check() {
+    x := l.b0[0].Get()
+    y := l.b0[1].Get()
 
-	var n int
-	if len(x) < len(y) {
-		n = len(x)
-	} else {
-		n = len(y)
-	}
+    var n int
+    if len(x) < len(y) {
+      n = len(x)
+    } else {
+      n = len(y)
+    }
 
-	d := []float64{}
-	for i := 0; i < n; i++ {
-		d = append(d, y[i]-x[i])
-	}
+    d := []float64{}
+    for i := 0; i < n; i++ {
+      d = append(d, y[i]-x[i])
+    }
 
-	l.b1[0].Put(d)
+    l.b1[0].Put(d)
+  }
 }
 
 func DiffLineConstructor(name string, words []string, b map[string]blocks.Block) Line {

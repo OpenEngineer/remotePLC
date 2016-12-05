@@ -225,9 +225,12 @@ func (d *DataLoggerType) refreshLogger(header string) error {
 	if err != nil {
 		return err
 	}
-	if info.Size() > d.maxFileSize || header != d.header {
+	if info.Size() > d.maxFileSize {
+    WriteEvent("max logfile size reached, making new logfile")
 		d.reopenLogger()
-	}
+	} else if header != d.header {
+    WriteEvent("logfile header different, making new logfile")
+  }
 
 	return nil
 }
