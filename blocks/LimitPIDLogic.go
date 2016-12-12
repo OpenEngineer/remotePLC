@@ -41,7 +41,7 @@ func (b *LimitPIDLogic) Update() {
     logger.WriteEvent("LimitPIDLogic.Update(): more inputs than before")
 	} else if numIn < numPrev { 
     // don't shorten
-    logger.WriteEvent("LimitPIDLogic.Update(): less inputs than before")
+    logger.WriteEvent("LimitPIDLogic.Update(): less inputs than before in " + b.name, ". now ", numIn, " vs. ", numPrev, " before")
 	}
 
 	// to get right size:
@@ -121,7 +121,7 @@ func (b *LimitPIDLogic) loadState() {
         if errPrev == nil && errInt == nil {
           b.ePrev = append(b.ePrev, ePrev)
           b.eInt = append(b.eInt, eInt)
-          logger.WriteEvent("LimitPIDLogic.loadState(), :", ePrev, eInt)
+          logger.WriteEvent("LimitPIDLogic.loadState(), ", b.name, " : ", ePrev, eInt)
         } else {
           logger.WriteError("LimitPIDLogic.loadState()", errPrev)
           logger.WriteError("LimitPIDLogic.loadState()", errInt)
