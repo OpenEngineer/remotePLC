@@ -3,7 +3,6 @@ package main
 import (
 	"./graph/"
 	"./logger/"
-	"errors"
 	"os"
 	"time"
 )
@@ -18,7 +17,8 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 	ticker := time.NewTicker(timeStep)
 	counter := 0
 	logger.WriteEvent("entering control loop...")
-	for {
+	stopValue := 0.0
+	for stopValue > -1.0 && stopValue < 1.0 {
 		<-ticker.C
 
 		g.CycleLines()
@@ -30,7 +30,7 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 		g.CycleParallel([]string{"outputs"})
 
 		g.CycleSerial([]string{"stops"})
-		checkStops(g)
+		stopValue = checkStops(g)
 
 		if counter%saveInterval == 0 {
 			g.LogData(logRegexp)
@@ -41,20 +41,23 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 
 	// also save the last time
 	g.LogData(logRegexp)
+
+	if stopValue > -1.0 {
+		os.Exit(2)
+	}
 }
 
-func checkStops(g *graph.Graph) {
+func checkStops(g *graph.Graph) float64 {
 	v := g.CycleValues([]string{"stops"}, -1.0, func(bname string, x, v float64) float64 {
 		if v > x {
 			x = v
 		}
 
 		if v >= 1.0 {
-			logger.WriteFatal("checkStops()", errors.New("in "+bname+": divergence detected"))
+			logger.WriteEvent("checkStops(), ", "in "+bname+": divergence detected")
 		}
 		return x
 	})
-	if v == -1.0 {
-		os.Exit(0)
-	}
+
+	return v
 }
