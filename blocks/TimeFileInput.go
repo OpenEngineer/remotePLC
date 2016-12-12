@@ -19,6 +19,7 @@ type TimeFileInput struct {
 	start   time.Time
 	tInterp []float64
 	xInterp [][]float64
+  cycle bool
 }
 
 // TODO: log error messages
@@ -30,7 +31,7 @@ func checkMonotonicity(tInterp []float64) bool {
 	}
 
 	for i, t := range tInterp[1:] {
-		if t <= tInterp[i] {
+		if t < tInterp[i] {
 			isMonotone = false
 		}
 	}
@@ -110,6 +111,18 @@ func (b *TimeFileInput) refreshFile() {
 func (b *TimeFileInput) findInterpSlice() (int, int, float64) {
 	// find the lower index
 	t := time.Now().Sub(b.start).Seconds()
+
+  if b.cycle {
+    tPeriod := b.tInterp[len(b.tInterp)-1]
+    if t > tPeriod {
+      t = t - tPeriod*float64(int(t/tPeriod))
+    }
+
+    if t > tPeriod {
+      log.Fatal("bad calc in findInterpSlice()")
+    }
+  }
+
 	var iLower int
 	for iLower = 0; iLower < len(b.tInterp)-1; iLower++ {
 		if b.tInterp[iLower] <= t && t < b.tInterp[iLower+1] {
@@ -186,11 +199,16 @@ func TimeFileInputConstructor(name string, words []string) Block {
 		log.Fatal(err)
 	}
 
-	b := &TimeFileInput{fname: fname, file: file, start: time.Now()}
+  cycle := false
+  if len(words) > 1 && words[1] == "Cycle" {
+    cycle = true
+  }
+
+  b := &TimeFileInput{fname: fname, file: file, start: time.Now(), cycle: cycle}
 
 	readErr := b.readFile()
 	if readErr != nil {
-		log.Fatal("error in TimeFileInputConstructor: ", fname, " not in valid format")
+		logger.WriteFatal("error in TimeFileInputConstructor: "+ fname+ " not in valid format", readErr)
 	}
 
 	return b
