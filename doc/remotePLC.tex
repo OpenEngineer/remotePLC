@@ -68,8 +68,8 @@ Rows and columns don't matter, all individual numbers are read into an array. (b
 Declared as: name ScaleInput scale offset OtherInputType $\ldots$\\\\
 Immediately applies a scale-factor and an offset to all the doubles gotten from the OtherInputType.
 \subsubsection{TimeFileInput}
-Declared as: name TimeFileInput fname\\\\
-Reread when changed. First column is the time in seconds. Between two rows the result is gotten via linear interpolation. If one row contains more numbers than the other, then the other is copied locally, and completed with zeros, before interpolation.
+Declared as: name TimeFileInput fname [Cycle] [Discrete]\\\\
+Reread when changed. First column is the time in seconds. Between two rows the result is gotten via linear interpolation. If one row contains more numbers than the other, then the other is copied locally, and completed with zeros, before interpolation. If ``Cycle'' is selected then the file is wrapped around after the max time. If ``Discrete'' is selected than there is no interpolation and the nearest row is selected.
 \subsubsection{ZeroInput}
 Declared as: name ZeroInput\\\\
 Identical to: name ConstantInput 0.0

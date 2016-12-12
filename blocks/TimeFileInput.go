@@ -19,7 +19,10 @@ type TimeFileInput struct {
 	start   time.Time
 	tInterp []float64
 	xInterp [][]float64
-  cycle bool
+
+	// options
+	cycle    bool
+	discrete bool // do not interpolate (nearest behaviour)
 }
 
 // TODO: log error messages
@@ -112,16 +115,16 @@ func (b *TimeFileInput) findInterpSlice() (int, int, float64) {
 	// find the lower index
 	t := time.Now().Sub(b.start).Seconds()
 
-  if b.cycle {
-    tPeriod := b.tInterp[len(b.tInterp)-1]
-    if t > tPeriod {
-      t = t - tPeriod*float64(int(t/tPeriod))
-    }
+	if b.cycle {
+		tPeriod := b.tInterp[len(b.tInterp)-1]
+		if t > tPeriod {
+			t = t - tPeriod*float64(int(t/tPeriod))
+		}
 
-    if t > tPeriod {
-      log.Fatal("bad calc in findInterpSlice()")
-    }
-  }
+		if t > tPeriod {
+			log.Fatal("bad calc in findInterpSlice()")
+		}
+	}
 
 	var iLower int
 	for iLower = 0; iLower < len(b.tInterp)-1; iLower++ {
@@ -166,8 +169,14 @@ func (b *TimeFileInput) Update() {
 
 	b.out = make([]float64, len(x0))
 
-	for i := 0; i < len(b.out); i++ { // in place modification
-		b.out[i] = (1.0-alpha)*x0[i] + alpha*x1[i]
+	if !b.discrete {
+		for i := 0; i < len(b.out); i++ { // in place modification
+			b.out[i] = (1.0-alpha)*x0[i] + alpha*x1[i]
+		}
+	} else if alpha < 0.5 {
+		b.out = x0
+	} else {
+		b.out = x1
 	}
 
 	b.in = b.out
@@ -199,16 +208,32 @@ func TimeFileInputConstructor(name string, words []string) Block {
 		log.Fatal(err)
 	}
 
-  cycle := false
-  if len(words) > 1 && words[1] == "Cycle" {
-    cycle = true
-  }
+	// todo: much better argument parser
+	cycle := false
+	discrete := false
+	if len(words) > 1 {
+		if words[1] == "Cycle" {
+			cycle = true
+		} else if words[1] == "Discrete" {
+			discrete = true
+		}
+	}
 
-  b := &TimeFileInput{fname: fname, file: file, start: time.Now(), cycle: cycle}
+	if len(words) > 2 {
+		if words[1] == "Cycle" || words[2] == "Cycle" {
+			cycle = true
+		}
+
+		if words[1] == "Discrete" || words[2] == "Discrete" {
+			discrete = true
+		}
+	}
+
+	b := &TimeFileInput{fname: fname, file: file, start: time.Now(), cycle: cycle, discrete: discrete}
 
 	readErr := b.readFile()
 	if readErr != nil {
-		logger.WriteFatal("error in TimeFileInputConstructor: "+ fname+ " not in valid format", readErr)
+		logger.WriteFatal("error in TimeFileInputConstructor: "+fname+" not in valid format", readErr)
 	}
 
 	return b
