@@ -1,7 +1,13 @@
 package graph
 
+import (
+	"../logger/"
+)
+
 func (g *Graph) initBlocks(startBlocks, middleBlocks []string) {
+	logger.WriteEvent("     ClearAll()...")
 	g.ClearAll()
+	logger.WriteEvent("     ClearAll() OK")
 
 	g.CycleParallel(startBlocks)
 

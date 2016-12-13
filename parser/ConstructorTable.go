@@ -219,17 +219,28 @@ func (t *ConstructorTable) WordToLine(matchWord string) {
 	var tmpTable [][]string
 
 	for _, row := range *t {
-		matchI := -1
+		matchI := []int{}
 		for i, word := range row {
 			if word == matchWord {
-				matchI = i
+				matchI = append(matchI, i)
 			}
 		}
 
-		if matchI >= 0 {
-			tmpTable = append(tmpTable, row[0:matchI])
-			tmpTable = append(tmpTable, []string{row[matchI]})
-			tmpTable = append(tmpTable, row[matchI+1:])
+		if len(matchI) > 0 {
+			tmpRow := row
+			count := 0
+			for _, i := range matchI {
+				iRel := i - count
+
+				tmpTable = append(tmpTable, tmpRow[0:iRel])
+				tmpTable = append(tmpTable, []string{tmpRow[iRel]})
+				tmpRow = tmpRow[iRel+1:]
+
+				count += iRel + 1
+			}
+			if len(tmpRow) > 0 {
+				tmpTable = append(tmpTable, tmpRow)
+			}
 		} else {
 			tmpTable = append(tmpTable, row)
 		}

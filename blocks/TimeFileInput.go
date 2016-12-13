@@ -229,6 +229,10 @@ func TimeFileInputConstructor(name string, words []string) Block {
 		}
 	}
 
+	if cycle == true {
+		logger.WriteEvent("cycling TimeInputFile")
+	}
+
 	b := &TimeFileInput{fname: fname, file: file, start: time.Now(), cycle: cycle, discrete: discrete}
 
 	readErr := b.readFile()

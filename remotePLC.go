@@ -68,6 +68,7 @@ func readTables(cmdString, fname string) (map[string][][]string, [][]string) {
 	t.RemoveEmptyRows(1)
 	t.MergeRows(MERGE_CHAR)
 	t.WordToLine(PIPE_CHAR)
+	t.Print()
 	t.SubstituteSingleWordLine(PIPE_CHAR, [][]int{
 		[]int{0, 0},
 		[]int{-1, 0}, // name of previous block

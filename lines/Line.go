@@ -6,17 +6,18 @@ import (
 )
 
 type SimpleLine struct { // must be different
-  LineData
+	LineData
 }
 
 // b0 and b1 have (assumed) equal length
 func (l *SimpleLine) Transfer() {
-  if l.check() {
-    for i, b := range l.b0 {
-      x := b.Get()
-      l.b1[i].Put(x)
-    }
-  }
+	if l.check() {
+		for i, b := range l.b0 {
+			x := b.Get()
+			l.b1[i].Put(x)
+		}
+
+	}
 }
 
 func LineConstructor(name string, words []string, b map[string]blocks.Block) Line {
@@ -32,11 +33,11 @@ func LineConstructor(name string, words []string, b map[string]blocks.Block) Lin
 	}
 
 	l := &SimpleLine{
-    LineData{
-      b0:        b0,
-      b1:        b1,
-      DebugName: name,
-    },
+		LineData{
+			b0:        b0,
+			b1:        b1,
+			DebugName: name,
+		},
 	}
 	return l
 }

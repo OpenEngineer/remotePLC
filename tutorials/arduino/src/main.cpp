@@ -7,7 +7,6 @@ int transPin = 13;
 void setup() {
   Serial.begin(9600);
   pinMode(transPin, OUTPUT);
-  pinMode(debugPin, OUTPUT);
 }
 
 void transmit(int data[25], int spaceDelay, int repeat) {
@@ -49,7 +48,7 @@ bool readSerial() {
     Serial.readBytes(serialBuffer, 27);
 
     serialSpaceDelay = int(serialBuffer[0])*10;
-    serialRepeat = int(serialBuffer[2]);
+    serialRepeat = int(serialBuffer[1]);
     //serialSpaceDelay = 256*int(serialBuffer[0]) + 196;
 
     int i0 = 2;

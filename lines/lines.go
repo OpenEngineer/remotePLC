@@ -3,6 +3,7 @@ package lines
 import (
 	"../blocks/"
 	"../logger/"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -25,7 +26,7 @@ type Line interface {
 }
 
 func (l *LineData) Transfer() {
-  log.Fatal("transfer func must be implemented in subclass, " + l.DebugName)
+	log.Fatal("transfer func must be implemented in subclass, " + l.DebugName)
 }
 
 func (l *LineData) Info() {
@@ -56,6 +57,11 @@ func (l *LineData) check() bool {
 	ok := true
 	var expected int
 	var actual int
+	if len(l.n0) != len(l.b0) {
+		errString := fmt.Sprintln("num input blocks is wrong in Line, ", len(l.n0), " vs ", len(l.b0), " in "+l.DebugName)
+		logger.WriteError("LineData.check()", errors.New(errString))
+	}
+
 	for i, b := range l.b0 {
 		if l.n0[i] != len(b.Get()) {
 			ok = false

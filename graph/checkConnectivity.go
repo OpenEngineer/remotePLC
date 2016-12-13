@@ -6,8 +6,10 @@ import (
 )
 
 func (g *Graph) checkConnectivity(startBlocks, middleBlocks, endBlocks []string) {
+	logger.WriteEvent("  initBlocks()...")
 	g.initBlocks(startBlocks, middleBlocks)
 
+	logger.WriteEvent("  initBlocks() OK")
 	for _, l := range g.l {
 		sum, _ := l.Count()
 

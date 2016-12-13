@@ -67,35 +67,37 @@ func (g *sortGraph) CountLineData() {
 func (g *Graph) sortLines(startBlocks, middleBlocks []string) {
 	numLines := len(g.l)
 
-	s := &sortGraph{
-		Graph: Graph{
-			b: g.b,
-			l: g.l,
-		},
-		sum:  make([]int, numLines),
-		diff: make([]int, numLines),
+	if numLines > 1 {
+		s := &sortGraph{
+			Graph: Graph{
+				b: g.b,
+				l: g.l,
+			},
+			sum:  make([]int, numLines),
+			diff: make([]int, numLines),
+		}
+
+		s.ClearAll()
+
+		s.CycleParallel(startBlocks)
+
+		for i := 0; i < numLines+1; i++ {
+			// update the inputs and the logic
+			s.CycleSerial(middleBlocks)
+
+			// count
+			s.CountLineData()
+
+			// first the lines where sum > 0 and diff == 0
+			// then sum > 0 and diff == sum
+			// then sum > 0 and diff < sum
+			// then sum == 0
+			sort.Stable(s)
+
+			// transfer data before repeating order loop
+			s.CycleLines()
+		}
+
+		g.l = s.l
 	}
-
-	s.ClearAll()
-
-	s.CycleParallel(startBlocks)
-
-	for i := 0; i < numLines+1; i++ {
-		// update the inputs and the logic
-		s.CycleSerial(middleBlocks)
-
-		// count
-		s.CountLineData()
-
-		// first the lines where sum > 0 and diff == 0
-		// then sum > 0 and diff == sum
-		// then sum > 0 and diff < sum
-		// then sum == 0
-		sort.Stable(s)
-
-		// transfer data before repeating order loop
-		s.CycleLines()
-	}
-
-	g.l = s.l
 }
