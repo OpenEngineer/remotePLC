@@ -30,7 +30,7 @@ func (l *LineData) Transfer() {
 }
 
 func (l *LineData) Info() {
-	fmt.Println(l.DebugName, ": ", l.n0)
+	fmt.Println(l.DebugName, ": ", l.n0, "(", l.b0, ")")
 }
 
 // count the number of input float64s
@@ -101,6 +101,7 @@ func ConstructAll(wordsTable [][]string, b map[string]blocks.Block) []Line {
 
 	for _, words := range wordsTable {
 		lines = append(lines, Construct(words[0], words[1], words[2:], b))
+		logger.WriteEvent("constructed line: ", words[:])
 	}
 
 	return lines

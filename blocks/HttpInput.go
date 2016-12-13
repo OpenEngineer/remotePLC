@@ -64,6 +64,7 @@ func HttpInputConstructor(name string, words []string) Block {
 
 	b := &HttpInput{
 		numInput: int(numInput),
+		tmp:      make([]float64, numInput),
 	}
 	b.Server = &http.Server{
 		Addr:           port,

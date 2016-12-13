@@ -140,11 +140,11 @@ func (g *Graph) getVisibleFields(visibleNameString string) (fields []string, dat
 	// visible rule
 	visibleName := regexp.MustCompile(visibleNameString)
 
-  var gnames []string
-  for gname, _ := range g.b {
-    gnames = append(gnames, gname)
-  }
-  sort.Strings(gnames)
+	var gnames []string
+	for gname, _ := range g.b {
+		gnames = append(gnames, gname)
+	}
+	sort.Strings(gnames)
 
 	for _, gname := range gnames {
 		// names of all the blocks

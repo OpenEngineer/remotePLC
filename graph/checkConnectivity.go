@@ -3,6 +3,7 @@ package graph
 import (
 	"../logger/"
 	"errors"
+	"fmt"
 )
 
 func (g *Graph) checkConnectivity(startBlocks, middleBlocks, endBlocks []string) {
@@ -13,12 +14,14 @@ func (g *Graph) checkConnectivity(startBlocks, middleBlocks, endBlocks []string)
 	for _, l := range g.l {
 		sum, _ := l.Count()
 
+		fmt.Println(sum)
 		if sum == 0 {
 			l.Info()
 			logger.WriteFatal("Graph.checkConnectivity()",
 				errors.New("unconnected line (could be due to circularity)"))
 		}
 	}
+
 	for _, gname := range endBlocks {
 		for key, block := range g.b[gname] {
 			if len(block.Get()) == 0 {

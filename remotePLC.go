@@ -82,6 +82,7 @@ func readTables(cmdString, fname string) (map[string][][]string, [][]string) {
 	if t.ContainsWord(HIDE_CHAR, 2) {
 		t.AddRow([]string{HIDE_CHAR, "Node"})
 	}
+	t.Print()
 
 	groupedBlockTable := make(map[string][][]string)
 	// create the sub tables, and leave the remainder in the block table
