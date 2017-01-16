@@ -58,7 +58,7 @@ func configSerialPort(portName string, bitRate int) (*serial.Port, error) {
 	options.BitRate = bitRate
 	options.Mode = serial.MODE_WRITE
 	options.DataBits = 8
-	options.StopBits = 1
+	options.StopBits = 2
 
 	p, openErr := options.Open(portName)
 	if openErr != nil {
