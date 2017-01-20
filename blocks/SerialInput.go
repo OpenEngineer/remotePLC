@@ -58,6 +58,7 @@ func (b *SerialInput) Update() {
 
 	tmp := make([]float64, b.numInput)
 	if n == b.numInput {
+		// TODO: use the last packet in the buffer (it is more recent)
 		for i, _ := range tmp {
 			tmp[i] = float64(buf[i])
 		}

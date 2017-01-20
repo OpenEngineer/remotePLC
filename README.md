@@ -15,15 +15,13 @@ copies to ~/bin/ if this directory exists
 * Arduino serial (tutorial with 433MHz example eg. for cheap remote switches)
 
 ## Remote Embedded Systems
-the ./RES/ folder contains source code intended for Remote Embedded Systems, eg:
-* the arduino 433MHz code
+the ./remoteEmbeddedSystems/ folder contains source code intended for eg:
+* the arduino duplexPWM code
 
 # license
 MIT, see LICENSE.txt
 
 # TODO:
 * parser for Block and Line constructor arguments
-* duplex arduino 433MHz operation
-* flexible selection of arduino 433MHz protocol
 * automatic documentation
 * compilation for MS Windows

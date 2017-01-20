@@ -1,4 +1,4 @@
-build-uno/main.o: main.cpp \
+build-uno/arduinoDuplexPWM.o: arduinoDuplexPWM.cpp \
  /usr/share/arduino/hardware/arduino/cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/binary.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/WCharacter.h \
