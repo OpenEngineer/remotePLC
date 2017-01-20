@@ -48,7 +48,9 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 }
 
 func checkStops(g *graph.Graph) float64 {
-	v := g.CycleValues([]string{"stops"}, -1.0, func(bname string, x, v float64) float64 {
+	// default value for this variable is 0.0
+	// this means that without stop criteria the program will run forever
+	v := g.CycleValues([]string{"stops"}, 0.0, func(bname string, x, v float64) float64 {
 		if v > x {
 			x = v
 		}

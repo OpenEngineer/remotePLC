@@ -26,19 +26,26 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		lastField := urlFields[len(urlFields)-1]
 		numberFields := strings.Split(lastField, ",")
 
-		b.tmp = []float64{}
-
-		for _, v := range numberFields {
-			number, parseErr := strconv.ParseFloat(v, 64)
-			if parseErr == nil {
-				b.tmp = append(b.tmp, number)
+		// distrust the network users and ignore the message if it doesn't match the number of expected fields
+		//  DoD attacks are always possible
+		if len(numberFields) != b.numInput {
+			fmt.Fprintf(w, "error: bad number of inputs")
+		} else {
+			for i, v := range numberFields {
+				number, parseErr := strconv.ParseFloat(v, 64)
+				if parseErr == nil {
+					b.tmp[i] = number
+				} else {
+					fmt.Fprintf(w, "error: bad number")
+					return
+				}
 			}
-		}
 
-		numberStr := fmt.Sprintln(b.tmp)
-		fmt.Fprintf(w, "%s", numberStr)
+			numberStr := fmt.Sprintln(b.tmp)
+			fmt.Fprintf(w, "%s", numberStr)
+		}
 	} else {
-		fmt.Fprintf(w, "error")
+		fmt.Fprintf(w, "error: bad url")
 	}
 }
 
@@ -64,7 +71,7 @@ func HttpInputConstructor(name string, words []string) Block {
 
 	b := &HttpInput{
 		numInput: int(numInput),
-		tmp:      make([]float64, numInput),
+		tmp:      make([]float64, numInput), // store incoming data here is it doesn't interfere with the internal Get function
 	}
 	b.Server = &http.Server{
 		Addr:           port,
