@@ -1,8 +1,8 @@
 package blocks
 
 import (
+	"../external/mikepb/serial"
 	"../logger/"
-	"../thirdParty/mikepb/serial"
 	"errors"
 	//"fmt"
 	"strconv"
