@@ -161,24 +161,26 @@ func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) m
 		}
 	}
 
+	// floats after 3 are simply ignored
+
 	return newState
 }
 
 // TODO: general function into blocks
 func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
-	isChanged := false
+	isDifferent := false
 
 	if len(b.in) != len(prev) {
-		isChanged = true
+		isDifferent = true
 	} else {
 		for i, v := range b.in {
 			if v != prev[i] {
-				isChanged = true
+				isDifferent = true
 			}
 		}
 	}
 
-	return isChanged
+	return isDifferent
 }
 
 // herein any http errors are ignored:
