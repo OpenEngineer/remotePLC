@@ -12,9 +12,11 @@ import (
 
 type PhilipsHueBridgeOutput struct {
 	OutputBlockData
-	lightNo string
-	uriGet  string
-	uriPut  string
+	lightNo       string
+	uriGet        string
+	uriPut        string
+	onInputChange bool
+	prev          []float64
 }
 
 func getHttpJson(uri string) (data map[string]interface{}, err error) {
@@ -162,14 +164,36 @@ func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) m
 	return newState
 }
 
+// TODO: general function into blocks
+func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
+	isChanged := false
+
+	if len(b.in) != len(prev) {
+		isChanged = true
+	} else {
+		for i, v := range b.in {
+			if v != prev[i] {
+				isChanged = true
+			}
+		}
+	}
+
+	return isChanged
+}
+
 // herein any http errors are ignored:
 func (b *PhilipsHueBridgeOutput) Update() {
+	// stops update immediately
+	if !b.InputIsDifferent(b.out) && b.onInputChange {
+		return
+	}
+
 	// get the old state
 	oldStates, err := getHttpJson(b.uriGet)
 
 	if err == nil {
 		oldState := oldStates[b.lightNo].(map[string]interface{})["state"].(map[string]interface{})
-		newState := updatePhilipsHueBridgeState(oldState, b.in)
+		newState := updatePhilipsHueBridgeState(oldState, b.in) // minimal state message that modifies the PhilipsHue
 
 		// now put the state
 		if len(newState) > 0 {
@@ -186,6 +210,13 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	username := words[1]
 	lightNo := words[2]
+
+	onInputChange := false // always send the message
+	if len(words) == 4 {
+		if words[3] == "onInputChange" {
+			onInputChange = true // only send the message if the input is different
+		}
+	}
 
 	// compose the uri string
 	uriGet := fmt.Sprintf("http://%s/api/%s/lights", ipaddr, username)
@@ -215,7 +246,7 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	}
 
 	// get the general state
-	b := &PhilipsHueBridgeOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut}
+	b := &PhilipsHueBridgeOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut, onInputChange: onInputChange}
 	return b
 }
 
