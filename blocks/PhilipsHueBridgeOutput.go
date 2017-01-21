@@ -204,7 +204,7 @@ func (b *PhilipsHueBridgeOutput) Update() {
 
 		// TODO: this function is used in many other places, move it to blocks.go
 		if len(b.out) != len(b.in) {
-			b.out = make([]float64{}, len(b.in))
+			b.out = make([]float64, len(b.in))
 		}
 		copy(b.in, b.out)
 
