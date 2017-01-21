@@ -28,6 +28,24 @@ type BlockData struct {
 func (b *BlockData) Update() {
 }
 
+func SafeCopy(numCopy int, src []float64, numDst int) []float64 {
+	dst := make([]float64, numDst)
+
+	// copy numCopy floats from src to dst
+	for i := 0; i < numCopy; i++ {
+		if i < len(src) {
+			dst[i] = src[i]
+		} else {
+			if i < len(dst) {
+				dst[i] = 0.0
+			} else {
+				dst = append(dst, 0.0)
+			}
+		}
+	}
+	return dst
+}
+
 func (b *BlockData) Get() []float64 {
 	return b.out
 }

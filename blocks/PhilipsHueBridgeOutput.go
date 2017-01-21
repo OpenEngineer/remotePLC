@@ -187,17 +187,10 @@ func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
 func (b *PhilipsHueBridgeOutput) Update() {
 	// stops update immediately
 	if !b.InputIsDifferent(b.prev) && b.onInputChange {
-		logger.WriteEvent("no change, not updating PhilipsHue") // DEBUG
-		logger.WriteEvent(b.in, b.prev)                         // DEBUG
 		return
-	} else { // DEBUG
-		logger.WriteEvent("change, updating PhilipsHue") // DEBUG
-		logger.WriteEvent(b.in, b.prev)                  // DEBUG
-		if len(b.prev) != len(b.in) {
-			b.prev = make([]float64, len(b.in))
-		}
-		copy(b.in, b.prev) // make sure that the next time the input is different
-	} // DEBUG
+	} else {
+		b.prev = SafeCopy(len(b.in), b.in, len(b.in)) // TODO: use this safe copy everywhere
+	}
 
 	// get the old state
 	oldStates, err := getHttpJson(b.uriGet)
@@ -211,10 +204,7 @@ func (b *PhilipsHueBridgeOutput) Update() {
 			putHttpJson(b.uriPut, newState)
 		}
 
-		if len(b.out) != len(b.in) {
-			b.out = make([]float64, len(b.in))
-		}
-		copy(b.in, b.out)
+		b.out = SafeCopy(len(b.in), b.in, len(b.in))
 	} else {
 		b.out = []float64{}
 	}

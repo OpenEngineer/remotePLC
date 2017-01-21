@@ -60,7 +60,7 @@ func (b *HttpInput) Update() {
 		b.in = b.tmp[0:b.numInput]
 		b.out = b.tmp
 	} else {
-		logger.WriteEvent("HttpInput, bad number of inputs ", len(b.tmp), " should be ", b.numInput)
+		logger.WriteEvent("HttpInput, bad number of inputs ", len(b.tmp), " should be ", b.numOutput)
 		if len(b.out) != b.numOutput {
 			b.out = make([]float64, b.numOutput)
 		}
