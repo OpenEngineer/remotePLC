@@ -72,18 +72,17 @@ func (b *SerialInput) Update() {
 }
 
 func SerialInputConstructor(name string, words []string) Block {
-	portName := words[0]
+	adress := words[0]
 	bitRate, err := strconv.ParseInt(words[1], 10, 64)
-
 	logger.WriteError("SerialInputConstructor()", err)
 
 	numInput, numInputErr := strconv.ParseInt(words[2], 10, 64)
 	logger.WriteError("SerialInputConstructor()", numInputErr)
 
-	p, pErr := configSerialPortRead(portName, int(bitRate))
-	logger.WriteError("SerialInputConstructor()", pErr)
+	configId := 0
+	MakeSerialPort(address, bitRate, configId)
 
-	b := &SerialInput{p: p, numInput: int(numInput)}
+	b := &SerialInput{address: address, numInput: int(numInput)}
 	return b
 }
 
