@@ -82,7 +82,7 @@ func HttpInputConstructor(name string, words []string) Block {
 			addTimeStamp = true
 			numOutput = numInput + 1
 		} else {
-			logger.Writter("HttpInputConstructor()", errors.New(words[2], " not a recognized option"))
+			logger.WriteError("HttpInputConstructor()", errors.New(words[2]+" not a recognized option"))
 		}
 	}
 
@@ -90,7 +90,7 @@ func HttpInputConstructor(name string, words []string) Block {
 		numInput:     int(numInput),
 		tmp:          make([]float64, numOutput), // store incoming data here is it doesn't interfere with the internal Get function
 		addTimeStamp: addTimeStamp,
-		numOutput:    numOutput,
+		numOutput:    int(numOutput),
 	}
 	b.Server = &http.Server{
 		Addr:           port,
