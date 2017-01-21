@@ -58,7 +58,7 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (b *HttpInput) Update() {
 	if len(b.tmp) == b.numOutput {
 		b.in = b.tmp[0:b.numInput]
-		b.out = b.tmp[:]
+		b.out = b.tmp
 	} else {
 		logger.WriteEvent("HttpInput, bad number of inputs ", len(b.tmp), " should be ", b.numInput)
 		if len(b.out) != b.numOutput {
