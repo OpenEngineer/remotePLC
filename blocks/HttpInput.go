@@ -68,7 +68,7 @@ func (b *HttpInput) Update() {
 }
 
 func HttpInputConstructor(name string, words []string) Block {
-	if len(words) != 2 {
+	if len(words) < 2 {
 		logger.WriteError("HttpInputConstructor()", errors.New("need at least 2 words"))
 	}
 	port := ":" + words[0]
