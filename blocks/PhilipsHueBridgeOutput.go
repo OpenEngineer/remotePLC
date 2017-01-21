@@ -184,9 +184,18 @@ func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
 // herein any http errors are ignored:
 func (b *PhilipsHueBridgeOutput) Update() {
 	// stops update immediately
-	if !b.InputIsDifferent(b.out) && b.onInputChange {
+	if !b.InputIsDifferent(b.prev) && b.onInputChange {
+		logger.WriteEvent("no change, not updating PhilipsHue") // DEBUG
+		logger.WriteEvent(b.in, b.prev) // DEBUG
 		return
-	}
+	} else { // DEBUG
+		logger.WriteEvent("change, updating PhilipsHue") // DEBUG
+		logger.WriteEvent(b.in, b.prev) // DEBUG
+		if len(b.prev) != len(b.in) {
+			b.prev = make([]float64, len(b.in))
+                }
+		copy(b.in, b.prev) // make sure that the next time the input is different
+        } // DEBUG
 
 	// get the old state
 	oldStates, err := getHttpJson(b.uriGet)
@@ -200,7 +209,10 @@ func (b *PhilipsHueBridgeOutput) Update() {
 			putHttpJson(b.uriPut, newState)
 		}
 
-		b.out = b.in
+		if len(b.out) != len(b.in) {
+			b.out = make([]float64, len(b.in))
+                }
+		copy(b.in, b.out) 
 	} else {
 		b.out = []float64{}
 	}
