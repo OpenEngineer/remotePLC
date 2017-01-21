@@ -161,24 +161,26 @@ func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) m
 		}
 	}
 
+	// floats after 3 are simply ignored
+
 	return newState
 }
 
 // TODO: general function into blocks
 func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
-	isChanged := false
+	isDifferent := false
 
 	if len(b.in) != len(prev) {
-		isChanged = true
+		isDifferent = true
 	} else {
 		for i, v := range b.in {
 			if v != prev[i] {
-				isChanged = true
+				isDifferent = true
 			}
 		}
 	}
 
-	return isChanged
+	return isDifferent
 }
 
 // herein any http errors are ignored:
@@ -200,7 +202,12 @@ func (b *PhilipsHueBridgeOutput) Update() {
 			putHttpJson(b.uriPut, newState)
 		}
 
-		b.out = b.in
+		// TODO: this function is used in many other places, move it to blocks.go
+		if len(b.out) != len(b.in) {
+			b.out = make([]float64{}, len(b.in))
+		}
+		copy(b.in, b.out)
+
 	} else {
 		b.out = []float64{}
 	}
