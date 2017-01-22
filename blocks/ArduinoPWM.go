@@ -7,6 +7,9 @@ import (
 	"errors"
 )
 
+// you must compile the remoteEmbeddedSystems/arduino/duplexPWM/arduinoDuplexPWM.cpp file
+// and install it on the arduino
+
 const (
 	ARDUINOPWM_MAX_BYTES int   = 255 // largest numBytes is header
 	ARDUINOPWM_WRITEOP   uint8 = 1
@@ -53,6 +56,13 @@ func arduinoPWMBytesToPacket(b []byte) ArduinoPWMPacket {
 	binary.Read(buffer, binary.LittleEndian, &p)
 
 	return p
+}
+
+// shoot and forget message
+func SendArduinoPWM(address string, p ArduinoPWMPacket) {
+	b := arduinoPWMPacketToBytes(p)
+
+	SendSerialBytes(address, b)
 }
 
 func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {

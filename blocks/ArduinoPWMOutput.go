@@ -2,9 +2,11 @@ package blocks
 
 import (
 	"../logger/"
+	"fmt"
 	"strconv"
 )
 
+// for more info see the ArduinoPWM.go file
 type ArduinoPWMOutput struct {
 	OutputBlockData
 	address  string
@@ -19,11 +21,13 @@ func (b *ArduinoPWMOutput) Update() {
 		b.question.Bytes[i] = byte(uint8(v))
 	}
 
-	_, err := SendReceiveArduinoPWM(b.address, b.question)
+	fmt.Println("sending message")
+	//_, err := SendReceiveArduinoPWM(b.address, b.question) // ORIG
+	SendArduinoPWM(b.address, b.question)
 
-	if err == nil {
-		b.out = b.in
-	}
+	//if err == nil { // ORIG
+	b.out = b.in
+	//}  // ORIG
 }
 
 func ArduinoPWMOutputConstructor(name string, words []string) Block {
@@ -51,3 +55,5 @@ func ArduinoPWMOutputConstructor(name string, words []string) Block {
 
 	return b
 }
+
+var ArduinoPWMOutputOk = AddConstructor("ArduinoPWMOutput", ArduinoPWMOutputConstructor)

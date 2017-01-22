@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// for more info see the ArduinoPWM.go file
 type ArduinoPWMInput struct {
 	InputBlockData
 	address  string

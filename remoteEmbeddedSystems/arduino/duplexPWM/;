@@ -47,7 +47,7 @@ void PrependToBuffer(int numBytesTotal, int numBytesHeader, uint8_t *header) {
 
 // write a bit, then wait a numer of microseconds (pulseWidth)
 void WriteOutputBit(uint8_t bit, int pulseWidth) {
-  if (bit != 0) {
+  if (bit == 1) {
     digitalWrite(outputPin, HIGH);
   } else {
     digitalWrite(outputPin, LOW);
@@ -60,18 +60,19 @@ void WriteOutputBit(uint8_t bit, int pulseWidth) {
 //  by cycling through its 8 bits.
 // we use a shifting mask for this
 void WriteOutputByte(uint8_t byte, int pulseWidth) {
-  uint8_t mask = 128; // send most significant bit first (network byte order)
+  uint8_t mask = 1;
 
   int i;
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < int(sizeof(uint8_t)); i++) {
     uint8_t bit = byte & mask;
 
     WriteOutputBit(bit, pulseWidth);
 
 
-
-    // shift the mask bit to right (towards least siginificant bit)
-    mask = mask >> 1; 
+    // shift the mask bit
+    // TODO: check if the order of bits is correct,
+    //  little or big endian?
+    mask = mask << 1; 
   }
 }
 
@@ -270,7 +271,7 @@ uint8_t intToFirstByte(int i) {
 
 uint8_t intToSecondByte(int i) {
   // i = i0 + i1*256
-  uint8_t i1 = (i-intToFirstByte(i))/256;
+  uint8_t i1 = i/256;
   return i1;
 }
 
@@ -308,7 +309,13 @@ void HandleMessage(int opCode, int numBytes, int pulseWidth, int timeOutCount, i
   
   switch(opCode) {
     case WRITE_OPCODE: {
+#ifdef DEBUG
+      digitalWrite(outputPin, HIGH);
+      delay(500);
+      digitalWrite(outputPin, LOW);
+#else
       WriteOutputBytes(numBytes, pulseWidth);
+#endif
 
       // assume always success
       // set the reply variables
@@ -353,6 +360,9 @@ void ParseSerialMessages() {
 }
 
 void loop() {
+#ifdef DEBUG
+  delayMicroseconds(50);
+#endif
   ParseSerialMessages();
 }
 

@@ -6,6 +6,7 @@ import (
 	"../external/serial"
 	"../logger/"
 	"errors"
+	"fmt"
 )
 
 // wrapper around serial.Port
@@ -160,8 +161,9 @@ func SerialBytesEqual(b1 []byte, b2 []byte) bool {
 // send without caring about reply message
 func SendSerialBytes(address string, bytes []byte) error {
 	p, err := GetSerialPort(address)
-	if err != nil {
+	if err == nil {
 		_, err = p.p.Write(bytes)
+		fmt.Println("sent ", bytes)
 	}
 
 	return err
@@ -212,7 +214,10 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte,
 
 	// if the port is ok, write and read the messages
 	if err == nil {
-		_, errWrite := p.p.Write(bytes)
+		var errWrite error
+		_, errWrite = p.p.Write(bytes)
+
+		fmt.Println("sent ", bytes)
 		if errWrite != nil {
 			logger.WriteError("SendReceiveSerialBytes()", errWrite)
 			return []byte{}, errWrite

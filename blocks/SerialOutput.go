@@ -2,6 +2,7 @@ package blocks
 
 import (
 	"../logger/"
+	//"fmt"
 	"strconv"
 )
 
@@ -17,15 +18,15 @@ func (b *SerialOutput) Update() {
 	newBytes := FloatsToSerialBytes(b.in)
 
 	// only send a new byte array // TODO: supersede by special node
-	if !SerialBytesEqual(newBytes, b.prevBytes) {
-		err := SendSerialBytes(b.address, newBytes)
-		logger.WriteError("SerialOutput.Update()", err)
-		if err == nil {
-			//fmt.Println("wrote: ", newBytes)
-			b.prevBytes = newBytes
-			b.out = b.in
-		}
+	//if !SerialBytesEqual(newBytes, b.prevBytes) {
+	err := SendSerialBytes(b.address, newBytes)
+	logger.WriteError("SerialOutput.Update()", err)
+	if err == nil {
+		//fmt.Println("wrote: ", newBytes)
+		b.prevBytes = newBytes
+		b.out = b.in
 	}
+	//}
 }
 
 func SerialOutputConstructor(name string, words []string) Block {
