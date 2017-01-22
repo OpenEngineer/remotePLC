@@ -1,9 +1,7 @@
 package blocks
 
 import (
-	"../external/mikepb/serial"
 	"../logger/"
-	"errors"
 	"strconv"
 )
 
@@ -12,13 +10,13 @@ import (
 type SerialOutput struct {
 	OutputBlockData
 	address   string
-	prevBytes []byte // previous list of bytes sent (compared via string comparisson)
+	prevBytes []byte // previous list of bytes sent (compared via string comparison)
 }
 
 func (b *SerialOutput) Update() {
 	newBytes := FloatsToSerialBytes(b.in)
 
-	// only send a new byte array
+	// only send a new byte array // TODO: supersede by special node
 	if !SerialBytesEqual(newBytes, b.prevBytes) {
 		err := SendSerialBytes(b.address, newBytes)
 		logger.WriteError("SerialOutput.Update()", err)

@@ -3,7 +3,7 @@ package blocks
 // contains all general Serial connection structures and variables
 
 import (
-	"../external/mikepb/serial"
+	"../external/serial"
 	"../logger/"
 	"errors"
 )
@@ -13,17 +13,17 @@ import (
 type SerialPort struct {
 	address  string
 	bitRate  int
-	configId int // protocolId itself is RS232 (at least how I think of it)
+	configId int // within RS232 many configuration are possible (eg. number of stop bits, parity bit ...)
 
 	p *serial.Port
 }
 
-// with this map we make sure that each port has a unique address
+// each constructed port has a unique address string
 var serialPorts = make(map[string]SerialPort)
 
 // different configurations are possible,
 //  these are loaded dynamically
-//  bitRates are kept separate because except them to require more frequent changes
+//  bitRates are kept separate because I expect them to require more frequent changes
 var serialPortConfigs = make(map[int]func(string, int) (*serial.Port, error))
 
 func (p *SerialPort) isEqual(bitRate int, configId int) bool {
@@ -86,7 +86,7 @@ func MakeSerialPort(address string, bitRate int, configId int) {
 	// has a port at this address already been opened?
 	if p, ok := serialPorts[address]; ok {
 		if !p.isEqual(bitRate, configId) {
-			log.WriteFatal("MakeSerialPort()",
+			logger.WriteFatal("MakeSerialPort()",
 				errors.New("same address serialPort for different bitRate or configId not allowed"))
 		}
 	} else { // configure a new port
@@ -103,6 +103,20 @@ func MakeSerialPort(address string, bitRate int, configId int) {
 	}
 }
 
+func GetSerialPort(address string) (SerialPort, error) {
+	var err error
+	var p SerialPort
+	var ok bool
+
+	if p, ok = serialPorts[address]; ok {
+		err = nil
+	} else {
+		err = errors.New("port " + address + " not found, ignoring")
+	}
+
+	return p, err
+}
+
 // functions for sending and receiving bytes from serial port
 
 // some message creation and comparison functions
@@ -114,6 +128,16 @@ func FloatsToSerialBytes(x []float64) []byte {
 	}
 
 	return b
+}
+
+func SerialBytesToFloats(b []byte) []float64 {
+	f := make([]float64, len(b))
+
+	for i, v := range b {
+		f[i] = float64(uint8(v))
+	}
+
+	return f
 }
 
 func SerialBytesEqual(b1 []byte, b2 []byte) bool {
@@ -135,16 +159,75 @@ func SerialBytesEqual(b1 []byte, b2 []byte) bool {
 
 // send without caring about reply message
 func SendSerialBytes(address string, bytes []byte) error {
-	var err error
-	if p, ok := serialPorts[address]; ok {
+	p, err := GetSerialPort(address)
+	if err != nil {
 		_, err = p.p.Write(bytes)
-	} else {
-		err = errors.New("port ", address, " not found, ignoring")
 	}
 
 	return err
 }
 
-// receive anything
-func ReceiveSerialBytes(address string, numBytes int, bytes []byte) (int, error) {
+// receive message of numBytes size
+// smaller messages are ignored and left in the serialPort buffer
+func ReceiveSerialBytes(address string, numBytes int) ([]byte, error) {
+	p, _ := GetSerialPort(address)
+
+	buffer := make([]byte, numBytes)
+
+	_, err := p.p.Read(buffer) // read the message of fixed size
+
+	logger.WriteError("ReceiveSerialBytes()", err)
+
+	return buffer, err
+}
+
+func ReceiveAllSerialBytes(address string) ([]byte, error) {
+	p, _ := GetSerialPort(address)
+
+	numIncoming, err := p.p.InputWaiting()
+	if err != nil {
+		logger.WriteError("ReceiveAllSerialBytes()", err)
+		return []byte{}, err
+	} else if numIncoming == 0 {
+		return []byte{}, nil
+	}
+
+	buffer := make([]byte, numIncoming) // take as many chars as possible from the stream
+
+	numRead, err := p.p.Read(buffer) // read everything
+	p.p.ResetInput()                 // throw away everything in the serialPort buffer
+
+	logger.WriteError("ReceiveAllSerialBytes()", err)
+
+	return buffer[0:numRead], err
+}
+
+// send and wait for a reply of fixed length
+// this function can be used for synchronous communication
+func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte, error) {
+	p, err := GetSerialPort(address)
+
+	// the reply will go into this buffer:
+	buffer := make([]byte, numBytes)
+
+	// if the port is ok, write and read the messages
+	if err == nil {
+		_, errWrite := p.p.Write(bytes)
+		if errWrite != nil {
+			logger.WriteError("SendReceiveSerialBytes()", errWrite)
+			return []byte{}, errWrite
+		}
+
+		p.p.Sync()
+
+		_, errRead := p.p.Read(buffer)
+		if errRead != nil {
+			logger.WriteError("SendReceiveSerialBytes()", errRead)
+			return []byte{}, errRead
+		}
+
+		return buffer, nil
+	} else {
+		return []byte{}, err
+	}
 }

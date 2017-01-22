@@ -38,7 +38,9 @@ type ExampleUDPPacket struct {
 	Records [EXAMPLEUDP_MAX_RECORDS]ExampleUDPRecord
 }
 
-func exampleUDPPacketSize(numRecords int) int {
+// includes the size of the header
+func (p *ExampleUDPPacket) Size() int {
+	numRecords := int(p.Header.NumRecords)
 	numBytes := 8 + numRecords*(EXAMPLEUDP_DATA_SIZE+2)
 	return numBytes
 }
@@ -48,8 +50,7 @@ func exampleUDPPacketToBytes(p ExampleUDPPacket) []byte {
 	err := binary.Write(b, binary.LittleEndian, p)
 	logger.WriteError("exampleUDPPacketToBytes()", err)
 
-	numRecords := int(p.Header.NumRecords)
-	numBytes := exampleUDPPacketSize(numRecords)
+	numBytes := p.Size()
 
 	return b.Bytes()[0:numBytes]
 }
