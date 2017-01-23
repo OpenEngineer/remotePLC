@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"sync"
 )
 
 // you must compile the remoteEmbeddedSystems/arduino/duplexPWM/arduinoDuplexPWM.cpp file
@@ -59,13 +60,82 @@ func arduinoPWMBytesToPacket(b []byte) ArduinoPWMPacket {
 }
 
 // shoot and forget message
-func SendArduinoPWM(address string, p ArduinoPWMPacket) {
+func sendArduinoPWM(address string, p ArduinoPWMPacket) {
 	b := arduinoPWMPacketToBytes(p)
 
 	SendSerialBytes(address, b)
 }
 
-func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
+// these single instance buffers should be locked before being written to
+var arduinoPWMPacketBuffer ArduinoPWMPacket
+var arduinoPWMPacketBufferMutex sync.Mutex
+
+var arduinoPWMSendingMutex sync.Mutex
+var arduinoPWMSendingState bool
+var arduinoPWMSendingStateMutex sync.Mutex
+
+func setArduinoPWMPacketBuffer(p ArduinoPWMPacket) {
+	arduinoPWMPacketBufferMutex.Lock()
+
+	arduinoPWMPacketBuffer = p
+
+	arduinoPWMPacketBufferMutex.Unlock()
+}
+
+func resetArduinoPWMPacketBuffer() {
+	setArduinoPWMPacketBuffer(ArduinoPWMPacket{})
+}
+
+func getArduinoPWMPacketBuffer() ArduinoPWMPacket {
+	arduinoPWMPacketBufferMutex.Lock()
+
+	p := arduinoPWMPacketBuffer
+
+	arduinoPWMPacketBufferMutex.Unlock()
+
+	return p
+}
+
+func lockArduinoPWMSending() {
+	arduinoPWMSendingMutex.Lock()
+
+	arduinoPWMSendingStateMutex.Lock()
+
+	arduinoPWMSendingState = true
+
+	arduinoPWMSendingStateMutex.Unlock()
+}
+
+func unlockArduinoPWMSending() {
+	arduinoPWMSendingStateMutex.Lock()
+
+	arduinoPWMSendingState = false
+
+	arduinoPWMSendingStateMutex.Unlock()
+
+	arduinoPWMSendingMutex.Unlock()
+}
+
+func lockIfUnlockedArduinoPWMSending() bool {
+	ok := false
+
+	arduinoPWMSendingStateMutex.Lock()
+
+	if !arduinoPWMSendingState {
+		arduinoPWMSendingMutex.Lock()
+
+		arduinoPWMSendingState = true
+
+		ok = true
+	}
+
+	arduinoPWMSendingStateMutex.Unlock()
+
+	return ok
+}
+
+// TODO: take timeouts into account
+func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
 	b0 := arduinoPWMPacketToBytes(p0)
 
 	b1, err := SendReceiveSerialBytes(address, b0, p0.Size())
@@ -80,4 +150,54 @@ func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacke
 	}
 
 	return p1, err
+}
+
+// TODO: return response packet once this functionality is needed
+// for now: shoot and forget message
+func sendReceiveArduinoPWMWriteOp(address string, p0 ArduinoPWMPacket) {
+	if ok := lockIfUnlockedArduinoPWMSending(); ok {
+		sendArduinoPWM(address, p0)
+
+		resetArduinoPWMPacketBuffer()
+
+		unlockArduinoPWMSending()
+	} else {
+		setArduinoPWMPacketBuffer(p0)
+	}
+}
+
+func sendReceiveArduinoPWMReadOp(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
+	lockArduinoPWMSending()
+
+	p1, err := sendReceiveArduinoPWMPacket(address, p0)
+
+	pw := getArduinoPWMPacketBuffer()
+
+	if pw.Header.OpCode == ARDUINOPWM_WRITEOP {
+		sendArduinoPWM(address, pw)
+
+		resetArduinoPWMPacketBuffer()
+	}
+
+	unlockArduinoPWMSending()
+
+	return p1, err
+}
+
+// depending on the packet opCode, do something different
+func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
+	var p1 ArduinoPWMPacket
+	var err error
+
+	switch op := p0.Header.OpCode; op {
+	case ARDUINOPWM_WRITEOP:
+		sendReceiveArduinoPWMWriteOp(address, p0)
+	case ARDUINOPWM_READOP:
+		p1, err = sendReceiveArduinoPWMReadOp(address, p0)
+	default:
+		return ArduinoPWMPacket{}, errors.New("opCode not recognized")
+	}
+
+	return p1, err
+
 }
