@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"sync"
+	"time"
 )
 
 // you must compile the remoteEmbeddedSystems/arduino/duplexPWM/arduinoDuplexPWM.cpp file
@@ -138,9 +140,17 @@ func lockIfUnlockedArduinoPWMSending() bool {
 func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
 	b0 := arduinoPWMPacketToBytes(p0)
 
-	b1, err := SendReceiveSerialBytes(address, b0, p0.Size())
+	// timeout after numBytes*pulseWidth*timeOutCount
+	timeOutDuration := time.Duration(int(p0.Header.NumBytes) *
+		int(p0.Header.PulseWidth) *
+		int(p0.Header.TimeOutCount) * 1000)
+	b1, err := SendReceiveSerialBytes(address, b0, p0.Size(), time.Now().Add(timeOutDuration))
 
-	logger.WriteError("SendReceiveArduinoPWM()", err)
+	fmt.Println("received ", b1)
+
+	if err != nil {
+		logger.WriteEvent("SendReceiveArduinoPWM()", err)
+	}
 
 	p1 := arduinoPWMBytesToPacket(b1)
 

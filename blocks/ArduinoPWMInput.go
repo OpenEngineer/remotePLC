@@ -2,6 +2,7 @@ package blocks
 
 import (
 	"../logger/"
+	"fmt"
 	"strconv"
 )
 
@@ -18,6 +19,7 @@ func (b *ArduinoPWMInput) Update() {
 	// send the message, and then wait for the reply
 	answer, err := SendReceiveArduinoPWM(b.address, b.question)
 
+	fmt.Println("moved past")
 	if err == nil {
 		bytes := answer.GetPayload()
 
@@ -26,6 +28,8 @@ func (b *ArduinoPWMInput) Update() {
 
 			b.out = tmp
 		}
+	} else {
+		b.out = make([]float64, b.numBytes)
 	}
 
 	b.in = b.out
@@ -43,6 +47,9 @@ func ArduinoPWMInputConstructor(name string, words []string) Block {
 	pulseWidth, pulseWidthErr := strconv.ParseInt(words[3], 10, 64)
 	logger.WriteError("ArduinoPWMInputConstructor()", pulseWidthErr)
 
+	timeOutCount, timeOutCountErr := strconv.ParseInt(words[4], 10, 64)
+	logger.WriteError("ArduinoPWMInputConstructor()", timeOutCountErr)
+
 	// function implemented in ./Serial.go
 	configId := 0
 	MakeSerialPort(address, int(bitRate), configId)
@@ -55,7 +62,7 @@ func ArduinoPWMInputConstructor(name string, words []string) Block {
 				OpCode:       ARDUINOPWM_READOP,
 				NumBytes:     uint8(numBytes),
 				PulseWidth:   uint16(pulseWidth),
-				TimeOutCount: uint16(numBytes * 10),
+				TimeOutCount: uint16(timeOutCount),
 			},
 		},
 	}

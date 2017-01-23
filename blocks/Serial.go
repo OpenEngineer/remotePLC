@@ -7,6 +7,7 @@ import (
 	"../logger/"
 	"errors"
 	"fmt"
+	"time"
 )
 
 // wrapper around serial.Port
@@ -206,8 +207,11 @@ func ReceiveAllSerialBytes(address string) ([]byte, error) {
 
 // send and wait for a reply of fixed length
 // this function can be used for synchronous communication
-func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte, error) {
+func SendReceiveSerialBytes(address string, bytes []byte, numBytes int, deadline time.Time) ([]byte, error) {
 	p, err := GetSerialPort(address)
+
+	// set the deadline
+	p.p.SetDeadline(deadline)
 
 	// the reply will go into this buffer:
 	buffer := make([]byte, numBytes)
@@ -219,7 +223,7 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte,
 
 		fmt.Println("sent ", bytes)
 		if errWrite != nil {
-			logger.WriteError("SendReceiveSerialBytes()", errWrite)
+			logger.WriteError("SendReceiveSerialBytes(), write", errWrite)
 			return []byte{}, errWrite
 		}
 
@@ -227,7 +231,7 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte,
 
 		_, errRead := p.p.Read(buffer)
 		if errRead != nil {
-			logger.WriteError("SendReceiveSerialBytes()", errRead)
+			logger.WriteEvent("SendReceiveSerialBytes(), read", errRead)
 			return []byte{}, errRead
 		}
 
@@ -235,4 +239,9 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int) ([]byte,
 	} else {
 		return []byte{}, err
 	}
+
+	// unset the deadline
+	p.p.SetDeadline(time.Time{})
+
+	return buffer, nil
 }

@@ -137,8 +137,8 @@ int ReadFirstInputByte(int pulseWidth, int byteI) {
   delayMicrosecondsAccurate(halfPulseWidth);
   halfPulseCount += 1;
 
-  uint8_t byte = 0x1;
-  uint8_t mask = 0x1;
+  uint8_t byte = 128;
+  uint8_t mask = 128;
 
   // if both samples are high the pulse is clearly high
   // if there is a mixed state then we only look at the first half pulse
@@ -147,7 +147,7 @@ int ReadFirstInputByte(int pulseWidth, int byteI) {
   bool firstHalfHigh = true; 
 
   int i;
-  for (i = 1; i < int(sizeof(uint8_t)); i++) {
+  for (i = 1; i < 8; i++) {
     firstHalfHigh = digitalRead(inputPin) == HIGH;
     delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
@@ -155,7 +155,7 @@ int ReadFirstInputByte(int pulseWidth, int byteI) {
     delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
-    mask = mask << 1;
+    mask = mask >> 1;
 
     // add a bit to the byte if the pulse is high
     if (firstHalfHigh) {
@@ -174,8 +174,8 @@ int ReadInputByte(int pulseWidth, int byteI) {
   int halfPulseCount = 0;
   int halfPulseWidth = pulseWidth/2;
 
-  uint8_t byte = 0x0;
-  uint8_t mask = 0x0;
+  uint8_t byte = 0;
+  uint8_t mask = 128;
 
   // if both samples are high the pulse is clearly high
   // if there is a mixed state then we only look at the first half pulse
@@ -184,20 +184,20 @@ int ReadInputByte(int pulseWidth, int byteI) {
   bool firstHalfHigh = true; 
 
   int i;
-  for (i = 1; i < int(sizeof(uint8_t)); i++) {
-    firstHalfHigh = digitalRead(inputPin) == HIGH;
+  for (i = 0; i < 8; i++) {
+    firstHalfHigh = (digitalRead(inputPin) == HIGH);
     delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
     delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
-
-    mask = mask << 1;
 
     // add a bit to the byte if the pulse is high
     if (firstHalfHigh) {
       byte = byte | mask;
     }
+
+    mask = mask >> 1;
   }
 
   // finally put the byte into the buffer
@@ -232,7 +232,9 @@ int ReadInputBytes(int numBytes, int pulseWidth, int timeOutCount) {
   //  for practical reasons we just use the length of the message (so we don't need handling of numBytes=0, 1 or 2)
   // waiting this long assures that the next high state we read is from the start of a message,
   //  not somewhere halfway
+#ifndef DEBUG
   pulseCount = WaitForClearInput(numBytes, pulseWidth, timeOutCount);
+#endif
 
   int byteI = 0;
 
@@ -245,7 +247,7 @@ int ReadInputBytes(int numBytes, int pulseWidth, int timeOutCount) {
     pulseCount += ReadInputByte(pulseWidth, byteI);
     byteI += 1;
 
-    if (byteI >= numBytes) {
+    if (byteI >= numBytes) { // we managed to read all the bytes we needed
       errorCode = 0; // success
       break;
     }
