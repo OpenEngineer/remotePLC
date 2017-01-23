@@ -31,6 +31,18 @@ void ShiftBuffer(int numBytes, int numShift) {
   }
 }
 
+//
+void delayMicrosecondsAccurate(int d) {
+  int dMicros = d%1000;
+  int dMillis = (d-dMicros)/1000;
+
+  delayMicroseconds(dMicros);
+
+  if (dMillis > 0) {
+    delay(dMillis);
+  }
+}
+
 // mostly used for headers
 void PrependToBuffer(int numBytesTotal, int numBytesHeader, uint8_t *header) {
   // numBytes by numShift amount to the right
@@ -53,7 +65,7 @@ void WriteOutputBit(uint8_t bit, int pulseWidth) {
     digitalWrite(outputPin, LOW);
   }
 
-  delayMicroseconds(pulseWidth);
+  delayMicrosecondsAccurate(pulseWidth);
 }
 
 // write a single byte, in char form, to the output pin
@@ -103,7 +115,7 @@ int WaitForClearInput(int numBytes, int pulseWidth, int timeOutCount) {
   while(clearCount < 2*numBytes && halfPulseCount < 2*timeOutCount) {
     clearCount = digitalRead(inputPin) == HIGH ?  0 : clearCount + 1;
 
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
 
     halfPulseCount += 1;
   }
@@ -118,11 +130,11 @@ int ReadFirstInputByte(int pulseWidth, int byteI) {
   int halfPulseWidth = pulseWidth/2;
 
   while (digitalRead(inputPin) == LOW) {
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
   }
 
-  delayMicroseconds(halfPulseWidth);
+  delayMicrosecondsAccurate(halfPulseWidth);
   halfPulseCount += 1;
 
   uint8_t byte = 0x1;
@@ -137,10 +149,10 @@ int ReadFirstInputByte(int pulseWidth, int byteI) {
   int i;
   for (i = 1; i < int(sizeof(uint8_t)); i++) {
     firstHalfHigh = digitalRead(inputPin) == HIGH;
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
     mask = mask << 1;
@@ -174,10 +186,10 @@ int ReadInputByte(int pulseWidth, int byteI) {
   int i;
   for (i = 1; i < int(sizeof(uint8_t)); i++) {
     firstHalfHigh = digitalRead(inputPin) == HIGH;
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
-    delayMicroseconds(halfPulseWidth);
+    delayMicrosecondsAccurate(halfPulseWidth);
     halfPulseCount += 1;
 
     mask = mask << 1;
