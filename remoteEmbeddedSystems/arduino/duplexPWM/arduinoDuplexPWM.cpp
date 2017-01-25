@@ -4,10 +4,10 @@
 #define OUTPUT_PIN 8 
 #define INPUT_PIN 12
 #define DEBUG // comment out for no debugging
-#define BUFFER_SIZE 262 // 255 max payload + 7 bytes header
+#define BUFFER_SIZE 263 // 255 max payload + 8 bytes header
 #define WRITE_OPCODE 1
 #define READ_OPCODE 2
-#define HEADER_SIZE 7 // 7 bytes
+#define HEADER_SIZE 8 // 8 bytes
 
 // write incoming serial messages to this pin:
 int outputPin = OUTPUT_PIN; 
@@ -106,14 +106,14 @@ void WriteOutputBytes(int numBytes, int pulseWidth) {
 
 // in case of timeOutCount==0, the function returns immediately.
 //  this can be used to read constant states (ie. not time varying)
-int WaitForClearInput(int numBytes, int pulseWidth, int timeOutCount) {
+int WaitForClearInput(int numBytes, int pulseWidth, int clearCount, int timeOutCount) {
   // whenever we are sampling we need to do it at double the rate of the message pulses
   int halfPulseCount = 0;
   int halfPulseWidth = pulseWidth/2;
-  int clearCount = 0; // also at double the sampling rate
+  int count = 0; // also at double the sampling rate
 
-  while(clearCount < 2*numBytes && halfPulseCount < 2*timeOutCount) {
-    clearCount = digitalRead(inputPin) == HIGH ?  0 : clearCount + 1;
+  while(count < 2*clearCount && halfPulseCount < 2*timeOutCount) {
+    count = digitalRead(inputPin) == HIGH ?  0 : count + 1;
 
     delayMicrosecondsAccurate(halfPulseWidth);
 
@@ -220,7 +220,7 @@ int ReadInputByte(int pulseWidth, int byteI) {
 //  bool return value: true for succes, false for failure
 //   in case of failure the buffer can contain an incomplete message, 
 //   the downstream function should then ignore this
-int ReadInputBytes(int numBytes, int pulseWidth, int timeOutCount) {
+int ReadInputBytes(int numBytes, int pulseWidth, int clearCount, int timeOutCount) {
   int errorCode = 1; // assume failed
   int pulseCount = 0;
 
@@ -232,9 +232,7 @@ int ReadInputBytes(int numBytes, int pulseWidth, int timeOutCount) {
   //  for practical reasons we just use the length of the message (so we don't need handling of numBytes=0, 1 or 2)
   // waiting this long assures that the next high state we read is from the start of a message,
   //  not somewhere halfway
-#ifndef DEBUG
-  pulseCount = WaitForClearInput(numBytes, pulseWidth, timeOutCount);
-#endif
+  pulseCount = WaitForClearInput(numBytes, pulseWidth, clearCount, timeOutCount);
 
   int byteI = 0;
 
@@ -265,6 +263,8 @@ int ReadInputBytes(int numBytes, int pulseWidth, int timeOutCount) {
 //                              READ_OPCODE for a read instruction
 //  - numBytes, between 0 and 255 (1 byte)
 //  - pulseWidth int (2bytes/16 bits)
+//  - clearCount uint8_t (1 byte): for READ_OP, start recording after the 
+//      inputPin is in a low state for this many pulses
 //  - timeOutCount int16 (only for the read instruction, otherwise ignored)
 //  - errorCode (1 byte): used in replies
 // body:
@@ -289,7 +289,7 @@ uint8_t intToSecondByte(int i) {
 }
 
 // serialization into header bytes
-void SetHeader(int opCode, int numBytes, int pulseWidth, int timeOutCount, int errorCode, uint8_t header[6]) {
+void SetHeader(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int errorCode, uint8_t header[HEADER_SIZE]) {
   header[0] = uint8_t(opCode);
 
   header[1] = uint8_t(numBytes);
@@ -297,26 +297,29 @@ void SetHeader(int opCode, int numBytes, int pulseWidth, int timeOutCount, int e
   header[2] = intToFirstByte(pulseWidth);
   header[3] = intToSecondByte(pulseWidth);
 
-  header[4] = intToFirstByte(timeOutCount);
-  header[5] = intToSecondByte(timeOutCount);
+  header[4] = uint8_t(clearCount);
 
-  header[6] = uint8_t(errorCode);
+  header[5] = intToFirstByte(timeOutCount);
+  header[6] = intToSecondByte(timeOutCount);
+
+  header[7] = uint8_t(errorCode);
 }
 
 // deserialization of header bytes
-void GetHeader(uint8_t header[6], int *opCode, int *numBytes, int *pulseWidth, int *timeOutCount, int *errorCode) {
+void GetHeader(uint8_t header[HEADER_SIZE], int *opCode, int *numBytes, int *pulseWidth, int *clearCount, int *timeOutCount, int *errorCode) {
   *opCode = int(header[0]);
   *numBytes = int(header[1]);
   *pulseWidth = twoBytesToInt(header[2], header[3]);
-  *timeOutCount = twoBytesToInt(header[4], header[5]);
-  *errorCode = int(header[6]);
+  *clearCount = int(header[4]);
+  *timeOutCount = twoBytesToInt(header[5], header[6]);
+  *errorCode = int(header[7]);
 }
 
 // HandleMessage() inputs:
 //  - the timeOutCount is ignored in the case of the write instruction opCode (WRITE_OPCODE)
 // do nothing in case the opCode isn't recognized
 //  - errorCode: mostly dummy input (overwritten internally), but can be used as default value in replies
-void HandleMessage(int opCode, int numBytes, int pulseWidth, int timeOutCount, int errorCode) {
+void HandleMessage(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int errorCode) {
   // after every message a reply needs to be sent upstream
   //  this is to assure that everything is synchronous
   
@@ -329,7 +332,7 @@ void HandleMessage(int opCode, int numBytes, int pulseWidth, int timeOutCount, i
       errorCode = 0;
     } break;
     case READ_OPCODE: {
-      errorCode = ReadInputBytes(numBytes, pulseWidth, timeOutCount);
+      errorCode = ReadInputBytes(numBytes, pulseWidth, clearCount, timeOutCount);
     } break;
     default:
       // do nothing in case the opCode isn't recognized
@@ -340,7 +343,7 @@ void HandleMessage(int opCode, int numBytes, int pulseWidth, int timeOutCount, i
   // the reply contains the same header as the received message
   uint8_t header[HEADER_SIZE];
 
-  SetHeader(opCode, numBytes, pulseWidth, timeOutCount, errorCode, header);
+  SetHeader(opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode, header);
 
   PrependToBuffer(numBytes, HEADER_SIZE, header);
 
@@ -354,15 +357,15 @@ void ParseSerialMessages() {
     // read the header 
     Serial.readBytes((char*)buffer, HEADER_SIZE);
 
-    int opCode, numBytes, pulseWidth, timeOutCount, errorCode; // the errorCode is unused for incoming messages, so this is a dummy variable
-    GetHeader(buffer, &opCode, &numBytes, &pulseWidth, &timeOutCount, &errorCode);
+    int opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode; // the errorCode is unused for incoming messages, so this is a dummy variable
+    GetHeader(buffer, &opCode, &numBytes, &pulseWidth, &clearCount, &timeOutCount, &errorCode);
 
     // read the body of the message
     Serial.readBytes((char*)buffer, numBytes);
 
     // this function handles downstream, and also upstream reply:
     // use the incoming errorCode as default value (mostly 0)
-    HandleMessage(opCode, numBytes, pulseWidth, timeOutCount, errorCode);
+    HandleMessage(opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode);
   }
 }
 

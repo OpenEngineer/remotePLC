@@ -14,7 +14,7 @@ import (
 // and install it on the arduino
 
 const (
-	ARDUINOPWM_MAX_BYTES int   = 255 // largest numBytes is header
+	ARDUINOPWM_MAX_BYTES int   = 255 // largest numBytes in header
 	ARDUINOPWM_WRITEOP   uint8 = 1
 	ARDUINOPWM_READOP    uint8 = 2
 )
@@ -23,7 +23,8 @@ type ArduinoPWMHeader struct {
 	OpCode       uint8  // eg WRITE_OPCODE or READ_OPCODE
 	NumBytes     uint8  // size of payload
 	PulseWidth   uint16 // duration in microseconds of smallest single pulse
-	TimeOutCount uint16 // only for READ_OPCODE, stop trying to read a message after this number of pulses
+	ClearCount   uint8  // number of pulses the line should be clear before recording, only for READ_OPCODE (ignored otherwise)
+	TimeOutCount uint16 // only for READ_OPCODE (ignored otherwise), stop trying to read a message after this number of pulses
 	ErrorCode    uint8  // returned by arduino, set to 0 when sending message to arduino
 }
 
@@ -34,7 +35,7 @@ type ArduinoPWMPacket struct {
 
 // includes header
 func (p *ArduinoPWMPacket) Size() int {
-	numBytes := 7 + int(p.Header.NumBytes)
+	numBytes := 8 + int(p.Header.NumBytes)
 	return numBytes
 }
 
@@ -78,9 +79,7 @@ var arduinoPWMSendingStateMutex sync.Mutex
 
 func setArduinoPWMPacketBuffer(p ArduinoPWMPacket) {
 	arduinoPWMPacketBufferMutex.Lock()
-
 	arduinoPWMPacketBuffer = p
-
 	arduinoPWMPacketBufferMutex.Unlock()
 }
 
@@ -90,9 +89,7 @@ func resetArduinoPWMPacketBuffer() {
 
 func getArduinoPWMPacketBuffer() ArduinoPWMPacket {
 	arduinoPWMPacketBufferMutex.Lock()
-
 	p := arduinoPWMPacketBuffer
-
 	arduinoPWMPacketBufferMutex.Unlock()
 
 	return p
@@ -100,21 +97,15 @@ func getArduinoPWMPacketBuffer() ArduinoPWMPacket {
 
 func lockArduinoPWMSending() {
 	arduinoPWMSendingMutex.Lock()
-
 	arduinoPWMSendingStateMutex.Lock()
-
 	arduinoPWMSendingState = true
-
 	arduinoPWMSendingStateMutex.Unlock()
 }
 
 func unlockArduinoPWMSending() {
 	arduinoPWMSendingStateMutex.Lock()
-
 	arduinoPWMSendingState = false
-
 	arduinoPWMSendingStateMutex.Unlock()
-
 	arduinoPWMSendingMutex.Unlock()
 }
 
@@ -125,9 +116,7 @@ func lockIfUnlockedArduinoPWMSending() bool {
 
 	if !arduinoPWMSendingState {
 		arduinoPWMSendingMutex.Lock()
-
 		arduinoPWMSendingState = true
-
 		ok = true
 	}
 
@@ -140,9 +129,8 @@ func lockIfUnlockedArduinoPWMSending() bool {
 func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacket, error) {
 	b0 := arduinoPWMPacketToBytes(p0)
 
-	// timeout after numBytes*pulseWidth*timeOutCount
-	timeOutDuration := time.Duration(int(p0.Header.NumBytes) *
-		int(p0.Header.PulseWidth) *
+	// timeout after pulseWidth*timeOutCount
+	timeOutDuration := time.Duration(int(p0.Header.PulseWidth) *
 		int(p0.Header.TimeOutCount) * 1000)
 	b1, err := SendReceiveSerialBytes(address, b0, p0.Size(), time.Now().Add(timeOutDuration))
 
@@ -167,9 +155,7 @@ func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPW
 func sendReceiveArduinoPWMWriteOp(address string, p0 ArduinoPWMPacket) {
 	if ok := lockIfUnlockedArduinoPWMSending(); ok {
 		sendArduinoPWM(address, p0)
-
 		resetArduinoPWMPacketBuffer()
-
 		unlockArduinoPWMSending()
 	} else {
 		setArduinoPWMPacketBuffer(p0)
@@ -185,7 +171,6 @@ func sendReceiveArduinoPWMReadOp(address string, p0 ArduinoPWMPacket) (ArduinoPW
 
 	if pw.Header.OpCode == ARDUINOPWM_WRITEOP {
 		sendArduinoPWM(address, pw)
-
 		resetArduinoPWMPacketBuffer()
 	}
 
