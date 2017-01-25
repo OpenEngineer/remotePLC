@@ -10,32 +10,33 @@ import (
 //  - args: list of strings taken directly from constructor file
 //  - positional: list of pointers into which to store the parsed args (len(args) >= len(positional))
 //  - optional: flags
-func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTemplate map[string]interface{}) (positional []interface{}, optional map[string]interface{}) {
+func ConstructorArgs(args []string, positional []*interface{}, optional map[string]*interface{}) {
 
-	if len(args) < len(positionalTemplate) {
-		logger.WriteFatal("ConstructorArgs()", errors.New("num args must be greater or equal than "+string(len(positionalTemplate))))
+	if len(args) < len(positional) {
+		logger.WriteFatal("ConstructorArgs()", errors.New("num args must be greater or equal than "+string(len(positional))))
 	}
 
 	// loop the positional pointers, and store the args
 	//  the positional args must come before the optional args
-	for i, p := range positionalTemplate {
+	for i, ptr := range positional {
 		var err error
 
+		p := *ptr
 		switch p.(type) {
 		case int64:
 			var v int64
 			v, err = strconv.ParseInt(args[i], 10, 64)
-			positional = append(positional, v)
+			*ptr = v
 		case int:
 			var v int64
 			v, err = strconv.ParseInt(args[i], 10, 64)
-			positional = append(positional, int(v))
+			*ptr = int(v)
 		case float64:
 			var v float64
 			v, err = strconv.ParseFloat(args[i], 64)
-			positional = append(positional, v)
+			*ptr = v
 		case string:
-			positional = append(positional, args[i])
+			*ptr = args[i]
 		default:
 			err = errors.New("type not recognized while parsing positional arguments")
 		}
@@ -43,12 +44,14 @@ func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTe
 	}
 
 	// loop the remaining arguments
-	i := len(positionalTemplate) // already treated
+	i := len(positional) // already treated
 	for i < len(args) {
 		var err error
 		option := args[i]
-		if defaultValue, ok := optionalTemplate[option]; ok {
+		if ptr, ok := optional[option]; ok {
 			i = i + 1
+
+			defaultValue := *ptr
 
 			switch defaultValue.(type) {
 			case int64:
@@ -56,7 +59,7 @@ func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTe
 				if i < len(args) {
 					var v int64
 					v, err = strconv.ParseInt(args[i], 10, 64)
-					optional[option] = v
+					*ptr = v
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
@@ -65,7 +68,7 @@ func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTe
 				if i < len(args) {
 					var v int64
 					v, err = strconv.ParseInt(args[i], 10, 64)
-					optional[option] = int(v)
+					*ptr = int(v)
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
@@ -74,19 +77,19 @@ func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTe
 				if i < len(args) {
 					var v float64
 					v, err = strconv.ParseFloat(args[i], 64)
-					optional[option] = v
+					*ptr = v
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
 			case string:
 				i = i + 1
 				if i < len(args) {
-					optional[option] = args[i]
+					*ptr = args[i]
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
 			case bool:
-				optional[option] = true
+				*ptr = true
 			default:
 				err = errors.New("type not recognized while parsing optional arguments")
 			}
@@ -96,13 +99,4 @@ func ConstructorArgs(args []string, positionalTemplate []interface{}, optionalTe
 
 		logger.WriteFatal("ConstructorArgs()", err)
 	}
-
-	// add the optional arg defaults if the option wasn't specified during construction
-	for key, v := range optionalTemplate {
-		if _, ok := optional[key]; !ok {
-			optional[key] = v
-		}
-	}
-
-	return positional, optional
 }
