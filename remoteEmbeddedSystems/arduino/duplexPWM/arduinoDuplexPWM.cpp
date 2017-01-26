@@ -8,6 +8,9 @@
 #define WRITE_OPCODE 1
 #define READ_OPCODE 2
 #define HEADER_SIZE 8 // 8 bytes
+#define MIN_SAMPLE_PERIOD 10 // number of Microseconds, determines rate at which the inputPin is sample
+#define MAX_SAMPLES_PER_PULSE 20
+#define SERIAL_BUFFER_SIZE 64
 
 // write incoming serial messages to this pin:
 int outputPin = OUTPUT_PIN; 
@@ -21,7 +24,9 @@ int inputPin = INPUT_PIN;
 //  are passed via this buffer to the WriteOutputBytes() function and
 //  from the ReadInput function
 uint8_t buffer[BUFFER_SIZE];
+char serialResetBuffer[64];
 
+// shift buffer to right
 void ShiftBuffer(int numBytes, int numShift) {
   int i;
   for (i = numBytes; i >= 0; i--) {
@@ -103,99 +108,139 @@ void WriteOutputBytes(int numBytes, int pulseWidth) {
 
 
 // # ReadInputBytes related functions:
+int READ_DESYNC = 0;
+
+int calcDesync(int highCount, int highPosCount, int lowCount, int lowPosCount) {
+  int highPos = highPosCount/highCount;
+  int lowPos = lowPosCount/lowCount;
+
+  int desync;
+  if (lowCount < highCount) {
+    if (lowPos < highPos) {
+      desync = -lowCount;
+    } else {
+      desync = lowCount;
+    }
+  } else { // highCount < lowCount
+    if (highPos < lowPos) {
+      desync = -highPos;
+    } else {
+      desync = highPos;
+    }
+  }
+
+  return desync;
+}
+
+// pulseWidth in microSeconds
+// return true for HIGH and false for LOW
+bool ReadInputBit(int pulseWidth) {
+  // keep a desync count inside
+  
+  // the the sampling rate
+  int samplePeriod = MIN_SAMPLE_PERIOD;
+  int samplesPerPulse = pulseWidth/MIN_SAMPLE_PERIOD;
+  if (samplesPerPulse > MAX_SAMPLES_PER_PULSE) {
+    samplesPerPulse = MAX_SAMPLES_PER_PULSE;
+    samplePeriod = pulseWidth/samplesPerPulse;
+  }
+
+  // set the counters
+  int count;
+  int highCount = 0;
+  int lowCount = 0;
+  int highPosCount = 0;
+  int lowPosCount = 0;
+
+  // count the number of high and low reads, as well as the cumulative high and low positions
+  for (count=READ_DESYNC; count<samplesPerPulse; count++){
+    if (digitalRead(inputPin) == HIGH) {
+      highCount += 1;
+      highPosCount += count;
+    } else {
+      lowCount += 1;
+      lowPosCount += count;
+    }
+
+    // now delay a little
+    delayMicroseconds(samplePeriod); // will definitely be smaller than 1000
+  }
+
+  // handle the average position counts in order to determine the desycn
+  READ_DESYNC = calcDesync(highCount, highPosCount, lowCount, lowPosCount);
+  
+  bool isHigh;
+  if (highCount >= lowCount) {
+    isHigh = true;
+  } else {
+    isHigh = false;
+  }
+
+  return isHigh;
+}
 
 // in case of timeOutCount==0, the function returns immediately.
 //  this can be used to read constant states (ie. not time varying)
 int WaitForClearInput(int numBytes, int pulseWidth, int clearCount, int timeOutCount) {
-  // whenever we are sampling we need to do it at double the rate of the message pulses
-  int halfPulseCount = 0;
-  int halfPulseWidth = pulseWidth/2;
-  int count = 0; // also at double the sampling rate
+  int count = 0; 
+  int pulseCount = 0;
 
-  while(count < 2*clearCount && halfPulseCount < 2*timeOutCount) {
-    count = digitalRead(inputPin) == HIGH ?  0 : count + 1;
+  while(count < clearCount && pulseWidth < timeOutCount) {
+    count = ReadInputBit(pulseWidth) == true ?  0 : count + 1;
 
-    delayMicrosecondsAccurate(halfPulseWidth);
-
-    halfPulseCount += 1;
+    pulseCount += 1;
   }
 
-  int pulseCount = halfPulseCount/2;
   return pulseCount;
 }
 
+
 // the first bit of the first byte will always be 0x1
-int ReadFirstInputByte(int pulseWidth, int byteI) {
-  int halfPulseCount = 0;
-  int halfPulseWidth = pulseWidth/2;
-
-  while (digitalRead(inputPin) == LOW) {
-    delayMicrosecondsAccurate(halfPulseWidth);
-    halfPulseCount += 1;
+int ReadFirstInputByte(int pulseWidth, int timeOutCount, int pulseCount, int byteI) {
+  while (ReadInputBit(pulseWidth)==false && pulseCount < timeOutCount) {
+    pulseCount += 1;
   }
 
-  delayMicrosecondsAccurate(halfPulseWidth);
-  halfPulseCount += 1;
+  if (pulseCount < timeOutCount) {
+    uint8_t byte = 128;
+    uint8_t mask = 128; // first pulse is always high
 
-  uint8_t byte = 128;
-  uint8_t mask = 128;
+    int i;
+    for (i = 1; i < 8; i++) {
+      mask = mask >> 1;
 
-  // if both samples are high the pulse is clearly high
-  // if there is a mixed state then we only look at the first half pulse
-  // if both are false then the pulse is clearly low
-  // this in fact means that we only need to look at the first half
-  bool firstHalfHigh = true; 
-
-  int i;
-  for (i = 1; i < 8; i++) {
-    firstHalfHigh = digitalRead(inputPin) == HIGH;
-    delayMicrosecondsAccurate(halfPulseWidth);
-    halfPulseCount += 1;
-
-    delayMicrosecondsAccurate(halfPulseWidth);
-    halfPulseCount += 1;
-
-    mask = mask >> 1;
-
-    // add a bit to the byte if the pulse is high
-    if (firstHalfHigh) {
-      byte = byte | mask;
+      // add a bit to the byte if the pulse is high
+      if (ReadInputBit(pulseWidth)==true) {
+        byte = byte | mask;
+      }
+      
+      pulseCount += 1;
     }
+
+    // finally put the byte into the buffer
+    buffer[byteI] = byte;
+  } else {
+    buffer[byteI] = 0;
   }
 
-  // finally put the byte into the buffer
-  buffer[byteI] = byte;
-
-  int pulseCount = halfPulseCount/2;
   return pulseCount;
 }
 
 int ReadInputByte(int pulseWidth, int byteI) {
-  int halfPulseCount = 0;
-  int halfPulseWidth = pulseWidth/2;
+  int pulseCount = 0;
 
   uint8_t byte = 0;
   uint8_t mask = 128;
 
-  // if both samples are high the pulse is clearly high
-  // if there is a mixed state then we only look at the first half pulse
-  // if both are false then the pulse is clearly low
-  // this in fact means that we only need to look at the first half
-  bool firstHalfHigh = true; 
-
   int i;
   for (i = 0; i < 8; i++) {
-    firstHalfHigh = (digitalRead(inputPin) == HIGH);
-    delayMicrosecondsAccurate(halfPulseWidth);
-    halfPulseCount += 1;
-
-    delayMicrosecondsAccurate(halfPulseWidth);
-    halfPulseCount += 1;
 
     // add a bit to the byte if the pulse is high
-    if (firstHalfHigh) {
+    if (ReadInputBit(pulseWidth)==true) {
       byte = byte | mask;
     }
+
+    pulseCount += 1;
 
     mask = mask >> 1;
   }
@@ -203,7 +248,6 @@ int ReadInputByte(int pulseWidth, int byteI) {
   // finally put the byte into the buffer
   buffer[byteI] = byte;
 
-  int pulseCount = halfPulseCount/2;
   return pulseCount;
 }
 
@@ -224,6 +268,7 @@ int ReadInputBytes(int numBytes, int pulseWidth, int clearCount, int timeOutCoun
   int errorCode = 1; // assume failed
   int pulseCount = 0;
 
+
   // using Nyquist theory we know we need to sample each pulse at 
   //  least twice in order to get all the information
   
@@ -237,7 +282,7 @@ int ReadInputBytes(int numBytes, int pulseWidth, int clearCount, int timeOutCoun
   int byteI = 0;
 
   // ReadFirstInputByte() waits for the high state, and only then starts sampling
-  pulseCount += ReadFirstInputByte(pulseWidth, byteI);
+  pulseCount += ReadFirstInputByte(pulseWidth, timeOutCount, pulseCount, byteI);
   byteI += 1;
 
   while (pulseCount <= timeOutCount) {
@@ -366,6 +411,14 @@ void ParseSerialMessages() {
     // this function handles downstream, and also upstream reply:
     // use the incoming errorCode as default value (mostly 0)
     HandleMessage(opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode);
+
+    // after handling a single message, we throw remaining bytes away
+    //Serial.flush(); 
+
+    // reset the remaining serial buffer if it is overflowing
+    while (Serial.available() >= 64) {
+      Serial.readBytes(serialResetBuffer, 64);
+    }
   }
 }
 

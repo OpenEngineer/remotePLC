@@ -164,7 +164,6 @@ func SendSerialBytes(address string, bytes []byte) error {
 	p, err := GetSerialPort(address)
 	if err == nil {
 		_, err = p.p.Write(bytes)
-		fmt.Println("sent ", bytes)
 	}
 
 	return err
@@ -221,7 +220,7 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int, deadline
 		var errWrite error
 		_, errWrite = p.p.Write(bytes)
 
-		fmt.Println("sent ", bytes)
+		fmt.Println("received ", bytes)
 		if errWrite != nil {
 			logger.WriteError("SendReceiveSerialBytes(), write", errWrite)
 			return []byte{}, errWrite

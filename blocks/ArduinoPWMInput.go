@@ -3,7 +3,7 @@ package blocks
 import (
 	//"../logger/"
 	"../parser/"
-	"fmt"
+	//"fmt"
 	//"strconv"
 )
 
@@ -20,7 +20,6 @@ func (b *ArduinoPWMInput) Update() {
 	// send the message, and then wait for the reply
 	answer, err := SendReceiveArduinoPWM(b.address, b.question)
 
-	fmt.Println("moved past")
 	if err == nil {
 		bytes := answer.GetPayload()
 
