@@ -20,11 +20,13 @@ const (
 )
 
 type ArduinoPWMHeader struct {
-	OpCode       uint8  // eg WRITE_OPCODE or READ_OPCODE
-	NumBytes     uint8  // size of payload
-	PulseWidth   uint16 // duration in microseconds of smallest single pulse
-	ClearCount   uint8  // number of pulses the line should be clear before recording, only for READ_OPCODE (ignored otherwise)
+	OpCode     uint8  // eg WRITE_OPCODE or READ_OPCODE
+	NumBytes   uint8  // size of payload
+	PulseWidth uint16 // duration in microseconds of smallest single pulse
+	ClearCount uint8  // READ_OP: number of pulses the line should be clear before recording
+	// WRITE_OP: number of clear pulses between repeated message
 	TimeOutCount uint16 // only for READ_OPCODE (ignored otherwise), stop trying to read a message after this number of pulses
+	NumRepeat    uint8  // only for WRITE_OP
 	ErrorCode    uint8  // returned by arduino, set to 0 when sending message to arduino
 }
 
@@ -35,7 +37,7 @@ type ArduinoPWMPacket struct {
 
 // includes header
 func (p *ArduinoPWMPacket) Size() int {
-	numBytes := 8 + int(p.Header.NumBytes)
+	numBytes := 9 + int(p.Header.NumBytes)
 	return numBytes
 }
 

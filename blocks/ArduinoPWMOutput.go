@@ -1,9 +1,8 @@
 package blocks
 
 import (
-	"../logger/"
+	"../parser/"
 	//"fmt"
-	"strconv"
 )
 
 // for more info see the ArduinoPWM.go file
@@ -31,17 +30,20 @@ func (b *ArduinoPWMOutput) Update() {
 }
 
 func ArduinoPWMOutputConstructor(name string, words []string) Block {
-	address := words[0]
-	bitRate, err := strconv.ParseInt(words[1], 10, 64)
-	logger.WriteError("ArduinoPWMOutputConstructor()", err)
+	var address string
+	var bitRate int
+	var pulseWidth int
+	var clearCount int
+	var numRepeat int
 
-	// the pulsewidth is specific to a set of eg. 433MHz devices
-	pulseWidth, pulseWidthErr := strconv.ParseInt(words[2], 10, 64)
-	logger.WriteError("ArduinoPWMOutputConstructor()", pulseWidthErr)
+	positional := parser.PositionalArgs(&address, &bitRate, &pulseWidth, &clearCount, &numRepeat)
+	optional := parser.OptionalArgs()
+
+	parser.ParseArgs(words, positional, optional)
 
 	// function implemented in ./Serial.go
 	configId := 0
-	MakeSerialPort(address, int(bitRate), configId)
+	MakeSerialPort(address, bitRate, configId)
 
 	b := &ArduinoPWMOutput{
 		address: address,
@@ -49,6 +51,7 @@ func ArduinoPWMOutputConstructor(name string, words []string) Block {
 			Header: ArduinoPWMHeader{
 				OpCode:     ARDUINOPWM_WRITEOP,
 				PulseWidth: uint16(pulseWidth),
+				NumRepeat:  uint8(numRepeat),
 			},
 		},
 	}

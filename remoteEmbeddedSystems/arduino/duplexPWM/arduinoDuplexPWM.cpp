@@ -7,7 +7,7 @@
 #define BUFFER_SIZE 263 // 255 max payload + 8 bytes header
 #define WRITE_OPCODE 1
 #define READ_OPCODE 2
-#define HEADER_SIZE 8 // 8 bytes
+#define HEADER_SIZE 9 // 9 bytes
 #define MIN_SAMPLE_PERIOD 20 // number of Microseconds, determines rate at which the inputPin is sample
 #define MAX_SAMPLES_PER_PULSE 40
 #define SERIAL_BUFFER_SIZE 64
@@ -99,10 +99,14 @@ void WriteOutputByte(uint8_t byte, int pulseWidth) {
 // if we want to repeat the message, then it is recommended to this upstream
 //  by sending the extended byte stream via the serial line. So repeating is 
 //  something that the client needs to handle
-void WriteOutputBytes(int numBytes, int pulseWidth) {
-  int i;
-  for (i = 0; i < numBytes; i++) {
-    WriteOutputByte(buffer[i], pulseWidth);
+void WriteOutputBytes(int numBytes, int pulseWidth, int clearCount, int numRepeat) {
+  int i, j;
+  for (i = 0; i <= numRepeat; i++) { // numRepeat ==0 -> send message once, numRepeat==1->twice etc.
+    for (j = 0; j < numBytes; j++) {
+      WriteOutputByte(buffer[j], pulseWidth);
+    }
+
+    delayMicrosecondsAccurate(pulseWidth*clearCount);
   }
 }
 
@@ -340,7 +344,7 @@ uint8_t intToSecondByte(int i) {
 }
 
 // serialization into header bytes
-void SetHeader(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int errorCode, uint8_t header[HEADER_SIZE]) {
+void SetHeader(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int numRepeat, int errorCode, uint8_t header[HEADER_SIZE]) {
   header[0] = uint8_t(opCode);
 
   header[1] = uint8_t(numBytes);
@@ -353,30 +357,33 @@ void SetHeader(int opCode, int numBytes, int pulseWidth, int clearCount, int tim
   header[5] = intToFirstByte(timeOutCount);
   header[6] = intToSecondByte(timeOutCount);
 
-  header[7] = uint8_t(errorCode);
+  header[7] = uint8_t(numRepeat);
+
+  header[8] = uint8_t(errorCode);
 }
 
 // deserialization of header bytes
-void GetHeader(uint8_t header[HEADER_SIZE], int *opCode, int *numBytes, int *pulseWidth, int *clearCount, int *timeOutCount, int *errorCode) {
+void GetHeader(uint8_t header[HEADER_SIZE], int *opCode, int *numBytes, int *pulseWidth, int *clearCount, int *timeOutCount, int *numRepeat, int *errorCode) {
   *opCode = int(header[0]);
   *numBytes = int(header[1]);
   *pulseWidth = twoBytesToInt(header[2], header[3]);
   *clearCount = int(header[4]);
   *timeOutCount = twoBytesToInt(header[5], header[6]);
-  *errorCode = int(header[7]);
+  *numRepeat = int(header[7]);
+  *errorCode = int(header[8]);
 }
 
 // HandleMessage() inputs:
 //  - the timeOutCount is ignored in the case of the write instruction opCode (WRITE_OPCODE)
 // do nothing in case the opCode isn't recognized
 //  - errorCode: mostly dummy input (overwritten internally), but can be used as default value in replies
-void HandleMessage(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int errorCode) {
+void HandleMessage(int opCode, int numBytes, int pulseWidth, int clearCount, int timeOutCount, int numRepeat, int errorCode) {
   // after every message a reply needs to be sent upstream
   //  this is to assure that everything is synchronous
   
   switch(opCode) {
     case WRITE_OPCODE: {
-      WriteOutputBytes(numBytes, pulseWidth);
+      WriteOutputBytes(numBytes, pulseWidth, clearCount, numRepeat);
 
       // assume always success
       // set the reply variables
@@ -394,7 +401,7 @@ void HandleMessage(int opCode, int numBytes, int pulseWidth, int clearCount, int
   // the reply contains the same header as the received message
   uint8_t header[HEADER_SIZE];
 
-  SetHeader(opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode, header);
+  SetHeader(opCode, numBytes, pulseWidth, clearCount, timeOutCount, numRepeat, errorCode, header);
 
   PrependToBuffer(numBytes, HEADER_SIZE, header);
 
@@ -408,20 +415,21 @@ void ParseSerialMessages() {
     // read the header 
     Serial.readBytes((char*)buffer, HEADER_SIZE);
 
-    int opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode; // the errorCode is unused for incoming messages, so this is a dummy variable
-    GetHeader(buffer, &opCode, &numBytes, &pulseWidth, &clearCount, &timeOutCount, &errorCode);
+    int opCode, numBytes, pulseWidth, clearCount, timeOutCount, numRepeat, errorCode; // the errorCode is unused for incoming messages, so this is a dummy variable
+    GetHeader(buffer, &opCode, &numBytes, &pulseWidth, &clearCount, &timeOutCount, &numRepeat, &errorCode);
 
     // read the body of the message
     Serial.readBytes((char*)buffer, numBytes);
 
     // this function handles downstream, and also upstream reply:
     // use the incoming errorCode as default value (mostly 0)
-    HandleMessage(opCode, numBytes, pulseWidth, clearCount, timeOutCount, errorCode);
+    HandleMessage(opCode, numBytes, pulseWidth, clearCount, timeOutCount, numRepeat, errorCode);
 
     // after handling a single message, we throw remaining bytes away
     //Serial.flush(); 
 
     // reset the remaining serial buffer if it is overflowing
+    // TODO: do the syncronization with start bytes
     while (Serial.available() >= 64) {
       Serial.readBytes(serialResetBuffer, 64);
     }
