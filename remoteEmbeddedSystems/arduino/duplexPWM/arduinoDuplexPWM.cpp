@@ -8,8 +8,8 @@
 #define WRITE_OPCODE 1
 #define READ_OPCODE 2
 #define HEADER_SIZE 8 // 8 bytes
-#define MIN_SAMPLE_PERIOD 10 // number of Microseconds, determines rate at which the inputPin is sample
-#define MAX_SAMPLES_PER_PULSE 20
+#define MIN_SAMPLE_PERIOD 20 // number of Microseconds, determines rate at which the inputPin is sample
+#define MAX_SAMPLES_PER_PULSE 40
 #define SERIAL_BUFFER_SIZE 64
 
 // write incoming serial messages to this pin:
@@ -169,6 +169,12 @@ bool ReadInputBit(int pulseWidth) {
   // handle the average position counts in order to determine the desycn
   READ_DESYNC = calcDesync(highCount, highPosCount, lowCount, lowPosCount);
   
+  // if the desync is negative, perhaps we should just wait this long and set it to zero
+  if (READ_DESYNC < 0) {
+    delayMicroseconds(-samplePeriod*READ_DESYNC);
+    READ_DESYNC = 0;
+  }
+
   bool isHigh;
   if (highCount >= lowCount) {
     isHigh = true;
