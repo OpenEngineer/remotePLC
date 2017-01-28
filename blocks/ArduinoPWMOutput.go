@@ -51,6 +51,7 @@ func ArduinoPWMOutputConstructor(name string, words []string) Block {
 			Header: ArduinoPWMHeader{
 				OpCode:     ARDUINOPWM_WRITEOP,
 				PulseWidth: uint16(pulseWidth),
+				ClearCount: uint8(clearCount),
 				NumRepeat:  uint8(numRepeat),
 			},
 		},

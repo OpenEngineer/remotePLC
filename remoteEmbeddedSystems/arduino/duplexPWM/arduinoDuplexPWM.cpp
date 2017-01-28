@@ -8,7 +8,7 @@
 #define WRITE_OPCODE 1
 #define READ_OPCODE 2
 #define HEADER_SIZE 9 // 9 bytes
-#define MIN_SAMPLE_PERIOD 20 // number of Microseconds, determines rate at which the inputPin is sample
+#define MIN_SAMPLE_PERIOD 30 // number of Microseconds, determines rate at which the inputPin is sample
 #define MAX_SAMPLES_PER_PULSE 40
 #define SERIAL_BUFFER_SIZE 64
 
