@@ -2,7 +2,8 @@
 
 // parameters:
 #define OUTPUT_PIN 8 
-#define INPUT_PIN 12
+#define INPUT_PIN 2
+#define INPUT_INTERRUPT_PIN 0 // 0 is the interrupt id of actual inputPin 2
 #define DEBUG // comment out for no debugging
 #define BUFFER_SIZE 263 // 255 max payload + 8 bytes header
 #define WRITE_OPCODE 1
@@ -11,6 +12,7 @@
 #define MIN_SAMPLE_PERIOD 30 // number of Microseconds, determines rate at which the inputPin is sample
 #define MAX_SAMPLES_PER_PULSE 40
 #define SERIAL_BUFFER_SIZE 64
+#define MARGIN 30 // default margin is 50micros
 
 // write incoming serial messages to this pin:
 int outputPin = OUTPUT_PIN; 
@@ -134,6 +136,56 @@ int calcDesync(int highCount, int highPosCount, int lowCount, int lowPosCount) {
   }
 
   return desync;
+}
+
+volatile unsigned long START_HIGH = 0;
+volatile unsigned long START_LOW = 0;
+volatile unsigned long END_HIGH = 0;
+volatile unsigned long END_LOW = 0;
+volatile int PULSE_WIDTH = 0;
+volatile int PULSE_COUNT_LOW = 0;
+volatile int PULSE_COUNT_HIGH = 0;
+volatile int PULSE_ID = 0;
+
+// interrupt functions
+void sampleRising() {
+  volatile unsigned long endLow = micros();
+
+  if (endLow > START_LOW + (unsigned long)(PULSE_WIDTH - MARGIN)) { // otherwise ignore (assume that we were always in a high state)
+#ifdef DEBUG
+    //digitalWrite(outputPin, HIGH);
+#endif
+    END_LOW = endLow;
+    START_HIGH = endLow;
+    int diff = int(END_LOW - START_LOW);
+    PULSE_COUNT_LOW = (diff + MARGIN)/PULSE_WIDTH; // with some margin
+  }
+}
+
+// only change the pulse id if a high pulse has been detected for at least half the pulseWidth
+void sampleFalling() {
+  volatile unsigned long endHigh = micros();
+
+  if (endHigh > START_HIGH + (unsigned long)(PULSE_WIDTH - MARGIN)) { // otherwise ignore (assume that we were always in a low state)
+#ifdef DEBUG
+    //digitalWrite(outputPin, LOW);
+#endif
+    END_HIGH = endHigh;
+    START_LOW = endHigh;
+    int diff = int(END_HIGH - START_HIGH);
+    PULSE_COUNT_HIGH = (diff + MARGIN)/PULSE_WIDTH; // the actual pulse can be MARGIN shorter than the expected pulse (but no less)
+
+    PULSE_ID = (PULSE_ID%32767) + 1;
+  }
+}
+
+// combination of rising and falling, because apparantly only one function can be attached to an interruptpin at a time
+void sampleChange() {
+  if (digitalRead(inputPin) == HIGH) { // rising, end a low pulse, start a high pulse
+    sampleRising();
+  } else { // falling, end a high pulse, start a low pulse (ends the pair low/high)
+    sampleFalling();
+  }
 }
 
 // pulseWidth in microSeconds
@@ -261,6 +313,40 @@ int ReadInputByte(int pulseWidth, int byteI) {
   return pulseCount;
 }
 
+unsigned long TIME_OUT_END;
+
+// pulseWidth in microSeconds
+void startTimeOut(int pulseWidth, int timeOutCount) {
+  long diff = ((long)pulseWidth*(long)timeOutCount-1L)/1000L+1L;
+  TIME_OUT_END = millis() + (unsigned long)(diff);
+}
+
+bool isTimeOut() {
+  unsigned long currentTime = millis();
+
+  if (currentTime > TIME_OUT_END) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool recordBitsIf8(int *bitI, uint8_t *byte, uint8_t *mask, int *byteI, int numBytes) {
+  bool isEnd = false;
+  if (*bitI == 8) {
+    buffer[*byteI] = *byte;
+    *byteI += 1;
+    *bitI = 0;
+    *mask = 128;
+    *byte = 0;
+
+    if (*byteI >= numBytes) { 
+      isEnd = true;
+    }
+  }
+
+  return isEnd;
+}
 // inputs to the ReadInputBytes() function:
 //  - numBytes: fill the global buffer with this number of bytes,
 //     only then is the reading considered a success.
@@ -275,35 +361,82 @@ int ReadInputByte(int pulseWidth, int byteI) {
 //   in case of failure the buffer can contain an incomplete message, 
 //   the downstream function should then ignore this
 int ReadInputBytes(int numBytes, int pulseWidth, int clearCount, int timeOutCount) {
+  // set the interrupt variables right
+  PULSE_WIDTH = pulseWidth;
+
+  // start the timeOut counter
+  startTimeOut(pulseWidth, timeOutCount);
+
+  // state variables and counters
+  int prevPulseId = PULSE_ID;
   int errorCode = 1; // assume failed
-  int pulseCount = 0;
-
-
-  // using Nyquist theory we know we need to sample each pulse at 
-  //  least twice in order to get all the information
-  
-  // the inputPin must be in a low state for the length of a message-2.
-  //  -2 because the message must be bounded by at least 2 high states
-  //  for practical reasons we just use the length of the message (so we don't need handling of numBytes=0, 1 or 2)
-  // waiting this long assures that the next high state we read is from the start of a message,
-  //  not somewhere halfway
-  pulseCount = WaitForClearInput(numBytes, pulseWidth, clearCount, timeOutCount);
-
   int byteI = 0;
+  int bitI = 0;
+  uint8_t byte = 0;
+  uint8_t mask = 128;
 
-  // ReadFirstInputByte() waits for the high state, and only then starts sampling
-  pulseCount += ReadFirstInputByte(pulseWidth, timeOutCount, pulseCount, byteI);
-  byteI += 1;
+  bool isStarted = false;
+  bool isFirstPulse = true;
 
-  while (pulseCount <= timeOutCount) {
+  int i; // used in the for loops when generating bits and bytes
 
-    pulseCount += ReadInputByte(pulseWidth, byteI);
-    byteI += 1;
+  // TODO: refactor 
+  while (!isTimeOut()) {
+    if (PULSE_ID != prevPulseId) { // only handle the low/high pulses if they are different from the last pair
+      // local copies of interrupts state variables (the interrupts can 
+      //   otherwise change these variables during the processing below)
+      prevPulseId = PULSE_ID;
+      int pulseCountLow = PULSE_COUNT_LOW;
+      int pulseCountHigh = PULSE_COUNT_HIGH;
 
-    if (byteI >= numBytes) { // we managed to read all the bytes we needed
-      errorCode = 0; // success
-      break;
-    }
+
+      // detect if this is the first pulse of a message
+      //  TODO: more robust criteria
+      if (!isStarted && (pulseCountLow >= clearCount && pulseCountHigh < clearCount)) {
+        isStarted = true;
+      } else if (!isStarted) {
+        // wait until the pulseCount of the first low pulse is large enough:
+        continue;
+      }
+
+      // take the low pulses into account if this is not the first pulse (for the 0's in the bytes)
+      if (!isFirstPulse) {
+        for (i = 0; i < pulseCountLow; i++) {
+          bitI += 1;
+          mask = mask >> 1;
+
+          if (recordBitsIf8(&bitI, &byte, &mask, &byteI, numBytes) == true) {
+            errorCode = 0;
+            break;
+          }
+        }
+      } else {
+        // this is the first pulse, from now on allow the processing the pulseCountLow into bits
+        isFirstPulse = false;
+      }
+
+      for (i = 0; i < pulseCountHigh; i++) {
+        byte = byte | mask;
+        bitI += 1;
+        mask = mask >> 1;
+
+        // record and reset bit state
+        if (recordBitsIf8(&bitI, &byte, &mask, &byteI, numBytes) == true) {
+          errorCode = 0;
+          break;
+        }
+      }
+
+      if (byteI >= numBytes) { // an extra check
+        errorCode = 0;
+        break;
+      }
+    } // end of change detection
+  } // end of while
+
+  // write the last byte, even though it might be incomplete
+  if (byteI < numBytes) {
+    buffer[numBytes-1] = byte;
   }
 
   return errorCode;
@@ -443,8 +576,12 @@ void loop() {
 // the slowest baudrate (9600 bps) for robustness
 void setup() {
   Serial.begin(9600, SERIAL_8N2);
+
+  // for WRITE_OP
   pinMode(outputPin, OUTPUT);
-  pinMode(inputPin , INPUT);
+
+  // for READ_OP
+  attachInterrupt(INPUT_INTERRUPT_PIN, sampleChange, CHANGE);
 }
 
 // program entry point
