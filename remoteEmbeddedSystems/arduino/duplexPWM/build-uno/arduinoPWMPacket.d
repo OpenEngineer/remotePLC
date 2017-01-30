@@ -1,4 +1,4 @@
-build-uno/arduinoDuplexPWM.o: arduinoDuplexPWM.cpp \
+build-uno/arduinoPWMPacket.o: arduinoPWMPacket.cpp arduinoPWMPacket.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/binary.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/WCharacter.h \
@@ -8,5 +8,4 @@ build-uno/arduinoDuplexPWM.o: arduinoDuplexPWM.cpp \
  /usr/share/arduino/hardware/arduino/cores/arduino/Print.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/Printable.h \
  /usr/share/arduino/hardware/arduino/cores/arduino/new.h \
- /usr/share/arduino/hardware/arduino/variants/standard/pins_arduino.h \
- arduinoPWMPacket.h pwmRead.h pwmWrite.h serialReadWrite.h
+ /usr/share/arduino/hardware/arduino/variants/standard/pins_arduino.h
