@@ -17,32 +17,47 @@ const (
 	ARDUINOPWM_MAX_BYTES int   = 255 // largest numBytes in header
 	ARDUINOPWM_WRITEOP   uint8 = 1
 	ARDUINOPWM_READOP    uint8 = 2
+	ARDUINOPWM_SYNCBYTE1 byte  = 172
+	ARDUINOPWM_SYNCBYTE2 byte  = 86
 )
 
-type ArduinoPWMHeader struct {
+type ArduinoPWMHeader1 struct {
 	OpCode     uint8  // eg WRITE_OPCODE or READ_OPCODE
 	NumBytes   uint8  // size of payload
 	PulseWidth uint16 // duration in microseconds of smallest single pulse
-	ClearCount uint8  // READ_OP: number of pulses the line should be clear before recording
+	ErrorCode  uint8  // returned by arduino, set to 0 when sending message to arduino
+}
+
+type ArduinoPWMHeader2 struct {
 	// WRITE_OP: number of clear pulses between repeated message
-	TimeOutCount uint16 // only for READ_OPCODE (ignored otherwise), stop trying to read a message after this number of pulses
-	NumRepeat    uint8  // only for WRITE_OP
-	ErrorCode    uint8  // returned by arduino, set to 0 when sending message to arduino
+	// READOP: number of pulses the line should be clear before recording
+	ClearCount uint8
+
+	// READOP: (ignored otherwise), stop trying to read a message after this number of pulses
+	TimeOutCount uint16
+
+	// WRITEOP: repeat the message this many times
+	NumRepeat uint8
+
+	// READOP: valid pulses are PulseWidth - PulseMargin (small errors on transmission device)
+	PulseMargin uint8
 }
 
 type ArduinoPWMPacket struct {
-	Header ArduinoPWMHeader
-	Bytes  [ARDUINOPWM_MAX_BYTES]byte
+	SyncBytes [2]byte
+	Header1   ArduinoPWMHeader1
+	Header2   ArduinoPWMHeader2
+	Bytes     [ARDUINOPWM_MAX_BYTES]byte
 }
 
 // includes header
 func (p *ArduinoPWMPacket) Size() int {
-	numBytes := 9 + int(p.Header.NumBytes)
+	numBytes := 2 + 5 + 5 + int(p.Header1.NumBytes)
 	return numBytes
 }
 
 func (p *ArduinoPWMPacket) GetPayload() []byte {
-	numBytes := p.Header.NumBytes
+	numBytes := p.Header1.NumBytes
 	return p.Bytes[0:numBytes]
 }
 
@@ -68,6 +83,7 @@ func arduinoPWMBytesToPacket(b []byte) ArduinoPWMPacket {
 func sendArduinoPWM(address string, p ArduinoPWMPacket) {
 	b := arduinoPWMPacketToBytes(p)
 
+	fmt.Println("sent b : ", b)
 	SendSerialBytes(address, b)
 }
 
@@ -132,8 +148,8 @@ func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPW
 	b0 := arduinoPWMPacketToBytes(p0)
 
 	// timeout after pulseWidth*timeOutCount
-	timeOutDuration := time.Duration(int(p0.Header.PulseWidth) *
-		int(p0.Header.TimeOutCount) * 1000)
+	timeOutDuration := time.Duration(int(p0.Header1.PulseWidth) *
+		int(p0.Header2.TimeOutCount) * 1000)
 	b1, err := SendReceiveSerialBytes(address, b0, p0.Size(), time.Now().Add(timeOutDuration))
 
 	fmt.Println("received ", b1)
@@ -144,7 +160,7 @@ func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPW
 
 	p1 := arduinoPWMBytesToPacket(b1)
 
-	if p1.Header.ErrorCode != 0 {
+	if p1.Header1.ErrorCode != 0 {
 		err = errors.New("nonzero error code from arduino")
 		logger.WriteError("SendReceiveArduinoPWM()", err)
 	}
@@ -171,7 +187,7 @@ func sendReceiveArduinoPWMReadOp(address string, p0 ArduinoPWMPacket) (ArduinoPW
 
 	pw := getArduinoPWMPacketBuffer()
 
-	if pw.Header.OpCode == ARDUINOPWM_WRITEOP {
+	if pw.Header1.OpCode == ARDUINOPWM_WRITEOP {
 		sendArduinoPWM(address, pw)
 		resetArduinoPWMPacketBuffer()
 	}
@@ -186,7 +202,10 @@ func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacke
 	var p1 ArduinoPWMPacket
 	var err error
 
-	switch op := p0.Header.OpCode; op {
+	p0.SyncBytes[0] = ARDUINOPWM_SYNCBYTE1
+	p0.SyncBytes[1] = ARDUINOPWM_SYNCBYTE2
+
+	switch op := p0.Header1.OpCode; op {
 	case ARDUINOPWM_WRITEOP:
 		sendReceiveArduinoPWMWriteOp(address, p0)
 	case ARDUINOPWM_READOP:
@@ -196,5 +215,4 @@ func SendReceiveArduinoPWM(address string, p0 ArduinoPWMPacket) (ArduinoPWMPacke
 	}
 
 	return p1, err
-
 }

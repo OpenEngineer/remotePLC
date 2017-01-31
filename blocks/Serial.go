@@ -218,6 +218,9 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int, deadline
 	// if the port is ok, write and read the messages
 	if err == nil {
 		var errWrite error
+
+		p.p.Reset()
+
 		_, errWrite = p.p.Write(bytes)
 
 		fmt.Println("sent     ", bytes)

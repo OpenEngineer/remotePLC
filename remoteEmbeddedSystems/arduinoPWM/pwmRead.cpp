@@ -2,8 +2,6 @@
 
 #include "arduinoPWMPacket.h"
 
-#define PWM_READ_DEFAULT_PULSE_MARGIN 50 // microseconds
-
 namespace pwmRead {
 
 // 
@@ -86,8 +84,8 @@ void pwmReadDetectHighLowPulses() {
 }
 
 void pwmReadSetInterruptParameters(arduinoPWMPacket p) {
-  pulseWidth = int(p.header.pulseWidth);
-  pulseMargin = PWM_READ_DEFAULT_PULSE_MARGIN;
+  pulseWidth = int(p.header1.pulseWidth);
+  pulseMargin = int(p.header2.pulseMargin);
   minPulseWidth = pulseWidth - pulseMargin;
 }
 
@@ -123,9 +121,9 @@ pwmReadState_t initReadState() {
 }
 
 void pwmReadByte(pwmReadState_t *state, arduinoPWMPacket *p) { 
-  if (state->byteI >= p->header.numBytes) {
+  if (state->byteI >= p->header1.numBytes) {
     state->isEnded = true;
-    p->header.errorCode = 0;
+    p->header1.errorCode = 0;
   } else {
     p->payload[state->byteI] = state->byte;
     state->byteI += 1;
@@ -154,8 +152,8 @@ void pwmReadHighBit(pwmReadState_t *state, arduinoPWMPacket *p) {
 }
 
 bool pwmReadReadyToStart(int tmpLowPulseCount, int tmpHighPulseCount, arduinoPWMPacket p) {
-  if (tmpLowPulseCount >= p.header.clearCount &&
-      tmpHighPulseCount < p.header.clearCount) {
+  if (tmpLowPulseCount >= p.header2.clearCount &&
+      tmpHighPulseCount < p.header2.clearCount) {
     return true;
   } else {
     return false;
@@ -178,11 +176,10 @@ arduinoPWMPacket pwmRead(arduinoPWMPacket p) {
 
   pwmReadState_t readState = initReadState();
   arduinoPWMPacket answer = p;
-  answer.header.errorCode = 1;
+  answer.header1.errorCode = 1;
 
-  unsigned long deadline = pwmReadGetTimeOutDeadline(int(p.header.timeOutCount));
-  //digitalWrite(8, HIGH);
-  //digitalWrite(8, LOW);
+  unsigned long deadline = pwmReadGetTimeOutDeadline(int(p.header2.timeOutCount));
+
   while (millis() <= deadline) {
     if (prevPulsePairId != pulsePairId) {
       // store volatile interrupt variables locally

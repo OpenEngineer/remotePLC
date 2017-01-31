@@ -14,7 +14,7 @@ arduinoPWMPacket handleMessage(arduinoPWMPacket question) {
   // this is to assure that everything is synchronous
   arduinoPWMPacket answer;
 
-  switch(question.header.opCode) {
+  switch(question.header1.opCode) {
     case ARDUINO_PWM_OPCODE_WRITE: {
       answer = pwmWrite(question);
     } break;
@@ -22,7 +22,7 @@ arduinoPWMPacket handleMessage(arduinoPWMPacket question) {
       answer = pwmRead::pwmRead(question);
     } break;
     default:
-      answer.header.errorCode = ARDUINO_PWM_ERROR_OPCODE_NOT_RECOGNIZED;
+      answer.header1.errorCode = ARDUINO_PWM_ERROR_OPCODE_NOT_RECOGNIZED;
       break;
   }
 
@@ -45,7 +45,12 @@ void loop() {
 
     arduinoPWMPacket answer = handleMessage(question);
     
-    serialWriteMessage(answer);
+    // only return a message in case of the READ OPCODE
+    if (question.header1.opCode == ARDUINO_PWM_OPCODE_READ) {
+      serialWriteMessage(answer);
+    }
+
+    delay(100); // delay between messages, as there might be interference
   }
 }
 

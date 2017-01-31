@@ -14,7 +14,7 @@ type ArduinoPWMOutput struct {
 
 func (b *ArduinoPWMOutput) Update() {
 	numBytes := len(b.in)
-	b.question.Header.NumBytes = uint8(numBytes)
+	b.question.Header1.NumBytes = uint8(numBytes)
 
 	for i, v := range b.in {
 		b.question.Bytes[i] = byte(uint8(v))
@@ -48,9 +48,11 @@ func ArduinoPWMOutputConstructor(name string, words []string) Block {
 	b := &ArduinoPWMOutput{
 		address: address,
 		question: ArduinoPWMPacket{
-			Header: ArduinoPWMHeader{
+			Header1: ArduinoPWMHeader1{
 				OpCode:     ARDUINOPWM_WRITEOP,
 				PulseWidth: uint16(pulseWidth),
+			},
+			Header2: ArduinoPWMHeader2{
 				ClearCount: uint8(clearCount),
 				NumRepeat:  uint8(numRepeat),
 			},

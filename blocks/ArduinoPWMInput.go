@@ -42,8 +42,9 @@ func ArduinoPWMInputConstructor(name string, words []string) Block {
 	var pulseWidth int
 	var clearCount int
 	var timeOutCount int
+	var pulseMargin int
 
-	positional := parser.PositionalArgs(&address, &bitRate, &numBytes, &pulseWidth, &clearCount, &timeOutCount)
+	positional := parser.PositionalArgs(&address, &bitRate, &numBytes, &pulseWidth, &clearCount, &timeOutCount, &pulseMargin)
 	optional := parser.OptionalArgs()
 
 	parser.ParseArgs(words, positional, optional)
@@ -56,12 +57,15 @@ func ArduinoPWMInputConstructor(name string, words []string) Block {
 		address:  address,
 		numBytes: numBytes,
 		question: ArduinoPWMPacket{
-			Header: ArduinoPWMHeader{
-				OpCode:       ARDUINOPWM_READOP,
-				NumBytes:     uint8(numBytes),
-				PulseWidth:   uint16(pulseWidth),
+			Header1: ArduinoPWMHeader1{
+				OpCode:     ARDUINOPWM_READOP,
+				NumBytes:   uint8(numBytes),
+				PulseWidth: uint16(pulseWidth),
+			},
+			Header2: ArduinoPWMHeader2{
 				ClearCount:   uint8(clearCount),
 				TimeOutCount: uint16(timeOutCount),
+				PulseMargin:  uint8(pulseMargin),
 			},
 		},
 	}

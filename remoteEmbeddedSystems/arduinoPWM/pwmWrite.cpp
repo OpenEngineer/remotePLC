@@ -53,14 +53,14 @@ void pwmWriteSetup(int outputPin) {
 
 arduinoPWMPacket pwmWrite(arduinoPWMPacket p) {
   int i, j;
-  for (i = 0; i <= p.header.numRepeat; i++) { // numRepeat==0 -> send message once, numRepeat==1 -> twice, etc.
-    for (j = 0; j < p.header.numBytes; j++) {
-      pwmWriteByte(p.payload[j], p.header.pulseWidth);
+  for (i = 0; i <= p.header2.numRepeat; i++) { // numRepeat==0 -> send message once, numRepeat==1 -> twice, etc.
+    for (j = 0; j < p.header1.numBytes; j++) {
+      pwmWriteByte(p.payload[j], p.header1.pulseWidth);
     }
 
-    pwmWriteDelayMicroseconds(p.header.pulseWidth*p.header.clearCount);
+    pwmWriteDelayMicroseconds(p.header1.pulseWidth*p.header2.clearCount);
   }
 
-  p.header.errorCode = 0;
+  p.header1.errorCode = 0;
   return p;
 }
