@@ -91,7 +91,7 @@ void pwmReadSetInterruptParameters(arduinoPWMPacket p) {
   minPulseWidth = pulseWidth - pulseMargin;
 }
 
-unsigned long pwmReadGetTimeOutDeadline(uint16_t pulseWidth, uint16_t timeOutCount) {
+unsigned long pwmReadGetTimeOutDeadline(int timeOutCount) {
   long deltaTimeOut = long((long)pulseWidth*(long)timeOutCount -1L)/1000L + 1L;
 
   unsigned long deadline = millis() + (unsigned long)(deltaTimeOut);
@@ -101,7 +101,6 @@ unsigned long pwmReadGetTimeOutDeadline(uint16_t pulseWidth, uint16_t timeOutCou
 typedef struct {
   bool isStarted;
   bool isEnded;
-  int errorCode;
 
   int byteI;
   int bitI;
@@ -114,7 +113,6 @@ pwmReadState_t initReadState() {
   pwmReadState_t state;
   state.isStarted = false;
   state.isEnded = false;
-  state.errorCode = 1;
   state.byteI = 0;
   state.bitI = 0;
 
@@ -125,15 +123,15 @@ pwmReadState_t initReadState() {
 }
 
 void pwmReadByte(pwmReadState_t *state, arduinoPWMPacket *p) { 
-  p->payload[state->byteI] = state->byte;
-  state->byteI += 1;
-  state->bitI = 0;
-  state->byte = 0;
-  state->mask = 128;
-
   if (state->byteI >= p->header.numBytes) {
     state->isEnded = true;
     p->header.errorCode = 0;
+  } else {
+    p->payload[state->byteI] = state->byte;
+    state->byteI += 1;
+    state->bitI = 0;
+    state->byte = 0;
+    state->mask = 128;
   }
 }
 
@@ -180,11 +178,12 @@ arduinoPWMPacket pwmRead(arduinoPWMPacket p) {
 
   pwmReadState_t readState = initReadState();
   arduinoPWMPacket answer = p;
+  answer.header.errorCode = 1;
 
-  unsigned long deadline = pwmReadGetTimeOutDeadline(p.header.pulseWidth, p.header.timeOutCount);
+  unsigned long deadline = pwmReadGetTimeOutDeadline(int(p.header.timeOutCount));
   //digitalWrite(8, HIGH);
   //digitalWrite(8, LOW);
-  while (millis() < deadline) {
+  while (millis() <= deadline) {
     if (prevPulsePairId != pulsePairId) {
       // store volatile interrupt variables locally
       prevPulsePairId       = pulsePairId;
@@ -198,7 +197,6 @@ arduinoPWMPacket pwmRead(arduinoPWMPacket p) {
           continue;
         }
       } 
-
 
       int i;
       if (!(readState.bitI==0 && readState.byteI==0)) { // this is not the first pulse (the first bit can never be 0)
@@ -214,9 +212,7 @@ arduinoPWMPacket pwmRead(arduinoPWMPacket p) {
       if (readState.isEnded) {
         break;
       }
-    } else {
-      delayMicroseconds(10);
-    }
+    } 
   }
 
   return answer;
