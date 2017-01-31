@@ -6,8 +6,10 @@ see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
 
 # compile and install
 In package root directory:
+```
 > make.sh
 > static build: make.sh -s
+```
 copies to ~/bin/ if this directory exists
 
 # internet of things:
@@ -22,6 +24,5 @@ the ./remoteEmbeddedSystems/ folder contains source code intended for eg:
 GPL3
 
 # TODO:
-* parser for Block and Line constructor arguments
 * automatic documentation
 * compilation for MS Windows
