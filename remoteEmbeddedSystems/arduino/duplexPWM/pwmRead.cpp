@@ -4,43 +4,35 @@
 
 #define PWM_READ_DEFAULT_PULSE_MARGIN 50 // microseconds
 
+namespace pwmRead {
+
 // 
 // internal functions and variables
 //
-int pwmReadInputPin;
+int inputPin;
 
 // for communication with the interrupt functions
-typedef struct {
-  unsigned long lowPulseStartTime;
-  unsigned long lowPulseEndTime;
-  unsigned long highPulseStartTime;
-  unsigned long highPulseEndTime;
-} pwmReadInterruptTimes_t;
+volatile unsigned long lowPulseStartTime = 0;
+volatile unsigned long lowPulseEndTime = 0;
+volatile unsigned long highPulseStartTime = 0;
+volatile unsigned long highPulseEndTime = 0;
 
-typedef struct {
-  int pulseWidth;
-  int pulseMargin;
-  unsigned long minPulseWidth; // pulseWidth - pulseMargin
-} pwmReadInterruptSettings_t;
+volatile int pulseWidth;
+volatile int pulseMargin;
+volatile unsigned long minPulseWidth; // pulseWidth - pulseMargin
 
-typedef struct {
-  int lowPulseCount;
-  int highPulseCount;
-  int pulsePairId;
-} pwmReadInterruptCounts_t;
-
-volatile pwmReadInterruptTimes_t    pwmReadInterruptTimes;
-volatile pwmReadInterruptSettings_t pwmReadInterruptSettings;
-volatile pwmReadInterruptCounts_t   pwmReadInterruptCounts;
+volatile int lowPulseCount = 0;
+volatile int highPulseCount = 0;
+volatile int pulsePairId = 0;
 
 void pwmReadDetectLowPulseEnd() {
   // get data
   unsigned long t  = micros();
-  unsigned long t0 = pwmReadInterruptTimes.lowPulseStartTime;
+  unsigned long t0 = lowPulseStartTime;
 
-  unsigned long dt    = pwmReadInterruptSettings.pulseWidth;
-  unsigned long et    = pwmReadInterruptSettings.pulseMargin;
-  unsigned long dtmin = pwmReadInterruptSettings.minPulseWidth;
+  unsigned long dt    = pulseWidth;
+  unsigned long et    = pulseMargin;
+  unsigned long dtmin = minPulseWidth;
 
   unsigned long t1min = t0 + dtmin;
 
@@ -50,22 +42,22 @@ void pwmReadDetectLowPulseEnd() {
     int N  = (Dt + et)/dt;
 
     // set data
-    pwmReadInterruptTimes.highPulseStartTime = t;
-    pwmReadInterruptTimes.lowPulseEndTime    = t1;
-    pwmReadInterruptCounts.lowPulseCount     = N;
+    highPulseStartTime = t;
+    lowPulseEndTime    = t1;
+    lowPulseCount      = N;
   }
 }
 
 void pwmReadDetectHighPulseEnd() {
   // get data
   unsigned long t  = micros();
-  unsigned long t0 = pwmReadInterruptTimes.highPulseStartTime;
+  unsigned long t0 = highPulseStartTime;
 
-  unsigned long dt    = pwmReadInterruptSettings.pulseWidth;
-  unsigned long et    = pwmReadInterruptSettings.pulseMargin;
-  unsigned long dtmin = pwmReadInterruptSettings.minPulseWidth;
+  unsigned long dt    = pulseWidth;
+  unsigned long et    = pulseMargin;
+  unsigned long dtmin = minPulseWidth;
 
-  int i = pwmReadInterruptCounts.pulsePairId;
+  int i = pulsePairId;
 
   unsigned long t1min = t0 + dtmin;
 
@@ -75,18 +67,18 @@ void pwmReadDetectHighPulseEnd() {
     int Dt = int(t1 - t0);
     int N = (Dt + et)/dt;
 
-    i = (i%32767) + 1;
+    i = (i+1)%32767;
 
     // set data
-    pwmReadInterruptTimes.lowPulseStartTime = t;
-    pwmReadInterruptTimes.highPulseEndTime = t1;
-    pwmReadInterruptCounts.highPulseCount = N;
-    pwmReadInterruptCounts.pulsePairId = i;
+    lowPulseStartTime = t;
+    highPulseEndTime  = t1;
+    highPulseCount    = N;
+    pulsePairId       = i;
   }
 }
 
 void pwmReadDetectHighLowPulses() {
-  if (digitalRead(pwmReadInputPin) != LOW) {
+  if (digitalRead(inputPin) != LOW) {
     pwmReadDetectLowPulseEnd();
   } else {
     pwmReadDetectHighPulseEnd();
@@ -94,13 +86,13 @@ void pwmReadDetectHighLowPulses() {
 }
 
 void pwmReadSetInterruptParameters(arduinoPWMPacket p) {
-  pwmReadInterruptSettings.pulseWidth = int(p.header.pulseWidth);
-  pwmReadInterruptSettings.pulseMargin = PWM_READ_DEFAULT_PULSE_MARGIN;
-  pwmReadInterruptSettings.minPulseWidth = pwmReadInterruptSettings.pulseWidth - pwmReadInterruptSettings.pulseMargin;
+  pulseWidth = int(p.header.pulseWidth);
+  pulseMargin = PWM_READ_DEFAULT_PULSE_MARGIN;
+  minPulseWidth = pulseWidth - pulseMargin;
 }
 
 unsigned long pwmReadGetTimeOutDeadline(uint16_t pulseWidth, uint16_t timeOutCount) {
-  long deltaTimeOut = ((long)pulseWidth*(long)timeOutCount -1L)/1000L + 1L;
+  long deltaTimeOut = long((long)pulseWidth*(long)timeOutCount -1L)/1000L + 1L;
 
   unsigned long deadline = millis() + (unsigned long)(deltaTimeOut);
   return deadline;
@@ -117,6 +109,20 @@ typedef struct {
   uint8_t byte;
   uint8_t mask;
 } pwmReadState_t;
+
+pwmReadState_t initReadState() {
+  pwmReadState_t state;
+  state.isStarted = false;
+  state.isEnded = false;
+  state.errorCode = 1;
+  state.byteI = 0;
+  state.bitI = 0;
+
+  state.byte = 0;
+  state.mask = 128;
+
+  return state;
+}
 
 void pwmReadByte(pwmReadState_t *state, arduinoPWMPacket *p) { 
   p->payload[state->byteI] = state->byte;
@@ -149,9 +155,9 @@ void pwmReadHighBit(pwmReadState_t *state, arduinoPWMPacket *p) {
   pwmReadBit(state, p);
 }
 
-bool pwmReadReadyToStart(pwmReadInterruptCounts_t interruptState, arduinoPWMPacket p) {
-  if (interruptState.lowPulseCount >= p.header.clearCount &&
-      interruptState.highPulseCount < p.header.clearCount) {
+bool pwmReadReadyToStart(int tmpLowPulseCount, int tmpHighPulseCount, arduinoPWMPacket p) {
+  if (tmpLowPulseCount >= p.header.clearCount &&
+      tmpHighPulseCount < p.header.clearCount) {
     return true;
   } else {
     return false;
@@ -161,7 +167,7 @@ bool pwmReadReadyToStart(pwmReadInterruptCounts_t interruptState, arduinoPWMPack
 // exported functions
 //
 void pwmReadSetupUnoPin2() {
-  pwmReadInputPin = 2;
+  inputPin = 2;
   int correspondingInterruptPin = 0;
 
   attachInterrupt(correspondingInterruptPin, pwmReadDetectHighLowPulses, CHANGE);
@@ -170,47 +176,50 @@ void pwmReadSetupUnoPin2() {
 arduinoPWMPacket pwmRead(arduinoPWMPacket p) {
   pwmReadSetInterruptParameters(p);
 
-  unsigned long deadline = pwmReadGetTimeOutDeadline(p.header.pulseWidth, p.header.timeOutCount);
+  int prevPulsePairId = pulsePairId;
 
-  pwmReadInterruptCounts_t interruptState;
-  interruptState.lowPulseCount = pwmReadInterruptCounts.lowPulseCount;
-  interruptState.highPulseCount= pwmReadInterruptCounts.highPulseCount;
-  interruptState.pulsePairId = pwmReadInterruptCounts.pulsePairId;
-  int prevPulsePairId = interruptState.pulsePairId;
-
-  pwmReadState_t readState;
+  pwmReadState_t readState = initReadState();
   arduinoPWMPacket answer = p;
 
+  unsigned long deadline = pwmReadGetTimeOutDeadline(p.header.pulseWidth, p.header.timeOutCount);
+  //digitalWrite(8, HIGH);
+  //digitalWrite(8, LOW);
   while (millis() < deadline) {
-    if (prevPulsePairId != interruptState.pulsePairId) {
+    if (prevPulsePairId != pulsePairId) {
       // store volatile interrupt variables locally
-      interruptState.lowPulseCount = pwmReadInterruptCounts.lowPulseCount;
-      interruptState.highPulseCount= pwmReadInterruptCounts.highPulseCount;
-      interruptState.pulsePairId = pwmReadInterruptCounts.pulsePairId;
-      prevPulsePairId = interruptState.pulsePairId;
+      prevPulsePairId       = pulsePairId;
+      int tmpLowPulseCount  = lowPulseCount;
+      int tmpHighPulseCount = highPulseCount;
       
-      if (!readState.isStarted && pwmReadReadyToStart(interruptState, p)) {
-        readState.isStarted = true;
-      } else {
-        continue;
-      }
+      if (!readState.isStarted) { 
+        if (pwmReadReadyToStart(tmpLowPulseCount, tmpHighPulseCount, p)) {
+          readState.isStarted = true; 
+        } else {
+          continue;
+        }
+      } 
+
 
       int i;
       if (!(readState.bitI==0 && readState.byteI==0)) { // this is not the first pulse (the first bit can never be 0)
-        for (i = 0; i < interruptState.lowPulseCount; i++) {
+        for (i = 0; i < tmpLowPulseCount; i++) {
           pwmReadLowBit(&readState, &answer);
         }
       }
 
-      for (i = 0; i < interruptState.highPulseCount; i++) {
+      for (i = 0; i < tmpHighPulseCount; i++) {
         pwmReadHighBit(&readState, &answer);
       }
 
       if (readState.isEnded) {
         break;
       }
+    } else {
+      delayMicroseconds(10);
     }
   }
 
   return answer;
 }
+
+} // end of pwmRead namespace

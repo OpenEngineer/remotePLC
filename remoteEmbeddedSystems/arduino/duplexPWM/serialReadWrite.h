@@ -10,4 +10,6 @@ arduinoPWMPacket serialReadMessage();
 
 void serialWriteMessage(arduinoPWMPacket p);
 
+bool serialReadWriteIsReady();
+
 #endif

@@ -10,8 +10,8 @@
 #define SERIAL_BITRATE 9600
 
 arduinoPWMPacket handleMessage(arduinoPWMPacket question) {
-  // after every message a reply needs to be sent upstream
-  //  this is to assure that everything is synchronous
+  // after every message a reply needs to be sent upstream.
+  // this is to assure that everything is synchronous
   arduinoPWMPacket answer;
 
   switch(question.header.opCode) {
@@ -19,7 +19,7 @@ arduinoPWMPacket handleMessage(arduinoPWMPacket question) {
       answer = pwmWrite(question);
     } break;
     case ARDUINO_PWM_OPCODE_READ: {
-      answer = pwmRead(question);
+      answer = pwmRead::pwmRead(question);
     } break;
     default:
       answer.header.errorCode = ARDUINO_PWM_ERROR_OPCODE_NOT_RECOGNIZED;
@@ -36,15 +36,17 @@ void setup() {
 
   pwmWriteSetup(OUTPUT_PIN);
 
-  pwmReadSetupUnoPin2();
+  pwmRead::pwmReadSetupUnoPin2();
 }
 
 void loop() {
-  arduinoPWMPacket question = serialReadMessage();
+  if (serialReadWriteIsReady()) {
+    arduinoPWMPacket question = serialReadMessage();
 
-  arduinoPWMPacket answer = handleMessage(question);
-
-  serialWriteMessage(answer);
+    arduinoPWMPacket answer = handleMessage(question);
+    
+    serialWriteMessage(answer);
+  }
 }
 
 // program entry point

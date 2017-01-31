@@ -85,6 +85,14 @@ void serialSetup(int bitRate) {
   Serial.begin(bitRate, SERIAL_8N2);
 }
 
+bool serialReadWriteIsReady() {
+  if (Serial.available() > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 arduinoPWMPacket serialReadMessage() {
   arduinoPWMPacket p;
 
