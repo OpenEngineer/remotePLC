@@ -19,7 +19,7 @@ the ./remoteEmbeddedSystems/ folder contains source code intended for eg:
 * the arduino duplexPWM code
 
 # license
-MIT, see LICENSE.txt
+GPL3
 
 # TODO:
 * parser for Block and Line constructor arguments

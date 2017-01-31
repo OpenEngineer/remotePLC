@@ -69,5 +69,7 @@ func WriteError(context string, err error) {
 }
 
 func WriteFatal(context string, err error) {
-	log.Fatal(context+", ", err)
+	if err != nil {
+		log.Fatal(context+", ", err)
+	}
 }

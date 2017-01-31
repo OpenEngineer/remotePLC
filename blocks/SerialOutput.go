@@ -1,9 +1,7 @@
 package blocks
 
 import (
-	"../external/mikepb/serial"
 	"../logger/"
-	"errors"
 	//"fmt"
 	"strconv"
 )
@@ -12,100 +10,34 @@ import (
 
 type SerialOutput struct {
 	OutputBlockData
-	p *serial.Port
-	//portName string
-	//baudRate  int
-	prevBytes []byte // previous list of bytes sent (compared via string comparisson)
-}
-
-func floats2Bytes(x []float64) []byte {
-	b := make([]byte, len(x))
-
-	for i, v := range x {
-		b[i] = byte(uint8(v))
-	}
-
-	return b
-}
-
-func bytesEqual(b1 []byte, b2 []byte) bool {
-	isEqual := true
-	if len(b1) == len(b2) {
-		for i, v := range b1 {
-			if uint8(v) != uint8(b2[i]) {
-				isEqual = false
-			}
-		}
-	} else {
-		isEqual = false
-	}
-
-	return isEqual
-
-}
-
-func listSerialPorts() {
-	info, err := serial.ListPorts()
-	logger.WriteError("listSerialPorts()", err)
-
-	for _, v := range info {
-		logger.WriteEvent("possible serial port: ", v.Name())
-	}
-}
-
-func configSerialPort(portName string, bitRate int) (*serial.Port, error) {
-	options := serial.RawOptions
-	options.BitRate = bitRate
-	options.Mode = serial.MODE_WRITE
-	options.DataBits = 8
-	options.StopBits = 2
-
-	p, openErr := options.Open(portName)
-	if openErr != nil {
-		logger.WriteEvent("problem opening " + portName + " in configSerialPort(), you might have insufficient rights")
-		return nil, openErr
-	}
-
-	if p == nil {
-		logger.WriteEvent("actual serial port: ", portName)
-		listSerialPorts()
-		logger.WriteFatal("configSerialPort()", errors.New("nil port"))
-	}
-
-	applyErr := p.Apply(&options)
-	if applyErr != nil {
-		return nil, applyErr
-	}
-
-	return p, nil
+	address   string
+	prevBytes []byte // previous list of bytes sent (compared via string comparison)
 }
 
 func (b *SerialOutput) Update() {
-	newBytes := floats2Bytes(b.in)
+	newBytes := FloatsToSerialBytes(b.in)
 
-	// only send a new byte array
-	if !bytesEqual(newBytes, b.prevBytes) {
-
-		_, writeErr := b.p.Write(newBytes)
-		logger.WriteError("SerialOutput.Update()", writeErr)
-		if writeErr == nil {
-			//fmt.Println("wrote: ", newBytes)
-			b.prevBytes = newBytes
-			b.out = b.in
-		}
+	// only send a new byte array // TODO: supersede by special node
+	//if !SerialBytesEqual(newBytes, b.prevBytes) {
+	err := SendSerialBytes(b.address, newBytes)
+	logger.WriteError("SerialOutput.Update()", err)
+	if err == nil {
+		//fmt.Println("wrote: ", newBytes)
+		b.prevBytes = newBytes
+		b.out = b.in
 	}
+	//}
 }
 
 func SerialOutputConstructor(name string, words []string) Block {
-	portName := words[0]
+	address := words[0]
 	bitRate, err := strconv.ParseInt(words[1], 10, 64)
-
 	logger.WriteError("SerialOutputConstructor()", err)
 
-	p, pErr := configSerialPort(portName, int(bitRate))
-	logger.WriteError("SerialOutputConstructor()", pErr)
+	configId := 0
+	MakeSerialPort(address, int(bitRate), configId)
 
-	b := &SerialOutput{p: p}
+	b := &SerialOutput{address: address}
 	return b
 }
 

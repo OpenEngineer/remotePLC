@@ -1,89 +1,48 @@
 package blocks
 
 import (
-	"../external/mikepb/serial"
 	"../logger/"
-	"errors"
-	"fmt"
+	//"fmt"
 	"strconv"
 )
 
 type SerialInput struct {
 	InputBlockData
-	p        *serial.Port
+	address  string
 	numInput int
 }
 
-func configSerialPortRead(portName string, bitRate int) (*serial.Port, error) {
-	options := serial.RawOptions
-	options.BitRate = bitRate
-	options.Mode = serial.MODE_READ
-	options.DataBits = 8
-	options.StopBits = 2
-
-	p, openErr := options.Open(portName)
-	if openErr != nil {
-		logger.WriteEvent("problem opening " + portName + " in configSerialPort(), you might have insufficient rights")
-		return nil, openErr
-	}
-
-	if p == nil {
-		logger.WriteEvent("actual serial port: ", portName)
-		listSerialPorts()
-		logger.WriteFatal("configSerialPort()", errors.New("nil port"))
-	}
-
-	applyErr := p.Apply(&options)
-	if applyErr != nil {
-		return nil, applyErr
-	}
-
-	return p, nil
-}
-
 func (b *SerialInput) Update() {
-	nin, err := b.p.InputWaiting()
-	if err != nil {
-		logger.WriteError("SerialInput.Update()", err)
-		return
-	} else if nin == 0 {
-		return // wait for next update cycle
-	}
+	bytes, _ := ReceiveAllSerialBytes(b.address)
+	n := len(bytes)
 
-	buf := make([]byte, nin) // take as many chars as possible from the stream
-
-	n, err := b.p.Read(buf)
-	b.p.ResetInput()
-	logger.WriteError("SerialInput.Update()", err)
-
+	// convert to floats
 	tmp := make([]float64, b.numInput)
 	if n == b.numInput {
-		// TODO: use the last packet in the buffer (it is more recent)
 		for i, _ := range tmp {
-			tmp[i] = float64(buf[i])
+			tmp[i] = float64(bytes[n-b.numInput+i]) // use last packet in buffer
 		}
 		b.out = tmp
-	} else {
+	} else { // return an array with zeros
 		b.out = tmp
 	}
 	b.in = b.out
 
-	fmt.Println(b.out)
+	//fmt.Println(b.out)
 }
 
 func SerialInputConstructor(name string, words []string) Block {
-	portName := words[0]
+	address := words[0]
 	bitRate, err := strconv.ParseInt(words[1], 10, 64)
-
 	logger.WriteError("SerialInputConstructor()", err)
 
 	numInput, numInputErr := strconv.ParseInt(words[2], 10, 64)
 	logger.WriteError("SerialInputConstructor()", numInputErr)
 
-	p, pErr := configSerialPortRead(portName, int(bitRate))
-	logger.WriteError("SerialInputConstructor()", pErr)
+	configId := 0
+	MakeSerialPort(address, int(bitRate), configId)
 
-	b := &SerialInput{p: p, numInput: int(numInput)}
+	b := &SerialInput{address: address, numInput: int(numInput)}
 	return b
 }
 
