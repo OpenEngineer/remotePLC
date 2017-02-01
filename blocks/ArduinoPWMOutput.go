@@ -17,7 +17,11 @@ func (b *ArduinoPWMOutput) Update() {
 	b.question.Header1.NumBytes = uint8(numBytes)
 
 	for i, v := range b.in {
-		b.question.Bytes[i] = byte(uint8(v))
+		if v < 256.0 {
+			b.question.Bytes[i] = byte(uint8(v))
+		} else {
+			b.question.Bytes[i] = 0
+		}
 	}
 
 	//fmt.Println("sending message")
