@@ -12,11 +12,10 @@ import (
 
 type PhilipsHueBridgeOutput struct {
 	OutputBlockData
-	lightNo       string
-	uriGet        string
-	uriPut        string
-	onInputChange bool
-	prev          []float64
+	lightNo string
+	uriGet  string
+	uriPut  string
+	prev    []float64
 }
 
 func getHttpJson(uri string) (data map[string]interface{}, err error) {
@@ -167,26 +166,22 @@ func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) m
 }
 
 // TODO: general function into blocks
-func (b *PhilipsHueBridgeOutput) InputIsDifferent(prev []float64) bool {
-	isDifferent := false
+func (b *PhilipsHueBridgeOutput) InputIsUndefined() bool {
+	isUndefined := false
 
-	if len(b.in) != len(prev) {
-		isDifferent = true
-	} else {
-		for i, v := range b.in {
-			if v != prev[i] {
-				isDifferent = true
-			}
+	for _, v := range b.in {
+		if v == UNDEFINED {
+			isUndefined = true
 		}
 	}
 
-	return isDifferent
+	return isUndefined
 }
 
 // herein any http errors are ignored:
 func (b *PhilipsHueBridgeOutput) Update() {
 	// stops update immediately
-	if !b.InputIsDifferent(b.prev) && b.onInputChange {
+	if b.InputIsUndefined() {
 		return
 	} else {
 		b.prev = SafeCopy(len(b.in), b.in, len(b.in)) // TODO: use this safe copy everywhere
@@ -214,13 +209,6 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	username := words[1]
 	lightNo := words[2]
-
-	onInputChange := false // always send the message
-	if len(words) == 4 {
-		if words[3] == "onInputChange" {
-			onInputChange = true // only send the message if the input is different
-		}
-	}
 
 	// compose the uri string
 	uriGet := fmt.Sprintf("http://%s/api/%s/lights", ipaddr, username)
@@ -250,7 +238,7 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	}
 
 	// get the general state
-	b := &PhilipsHueBridgeOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut, onInputChange: onInputChange}
+	b := &PhilipsHueBridgeOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut}
 	return b
 }
 
