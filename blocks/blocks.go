@@ -12,6 +12,8 @@ const (
 	STRICT
 )
 
+const UNDEFINED float64 = 1e300
+
 var BlockMode BlockModeType = REGULAR
 
 type Block interface {

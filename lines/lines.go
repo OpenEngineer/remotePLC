@@ -9,6 +9,8 @@ import (
 	"regexp"
 )
 
+const UNDEFINED float64 = blocks.UNDEFINED
+
 type LineData struct {
 	b0 []blocks.Block
 	b1 []blocks.Block
