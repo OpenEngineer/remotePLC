@@ -49,6 +49,8 @@ func ReductionNodeConstructor(name string, words []string) Block {
 	return b
 }
 
+var ReductionNodeConstructorOk = AddConstructor("ReductionNode", ReductionNodeConstructor)
+
 // only 0.0 and 1.0 are treated, all other numbers are ignored
 func ReductionNodeAndOperator(x []float64) float64 {
 	y := 1.0
