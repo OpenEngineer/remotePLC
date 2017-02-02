@@ -3,6 +3,7 @@ package parser
 import (
 	"../logger/"
 	"errors"
+	"os"
 	"strconv"
 )
 
@@ -27,6 +28,13 @@ func ParsePositionalArgs(args []string, positional []interface{}) {
 			*p = v
 		case *string:
 			*p = args[i]
+		case **os.File:
+			fname := args[i]
+			if fname == "stdin" {
+				*p = os.Stdin
+			} else {
+				*p, err = os.Open(fname)
+			}
 		default:
 			err = errors.New("type not recognized while parsing positional arguments")
 		}
@@ -116,6 +124,7 @@ func PositionalArgs(ptrs ...interface{}) (positional []interface{}) {
 }
 
 // take a variadic paired list of strings and pointers and construct a map
+// key string first, obj ptr second
 func OptionalArgs(objs ...interface{}) (optional map[string]interface{}) {
 	// collect the inputs
 	var keys []string

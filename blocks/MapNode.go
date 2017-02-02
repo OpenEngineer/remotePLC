@@ -2,6 +2,7 @@ package blocks
 
 import (
 	"../logger/"
+	"../parser/"
 	"bufio"
 	"errors"
 	"log"
@@ -16,7 +17,6 @@ import (
 
 type MapNode struct {
 	BlockData
-	fname   string
 	file    *os.File // usefull for seeking
 	modTime time.Time
 	xInterp []float64
@@ -40,6 +40,12 @@ func checkMonotonicity_(xInterp []float64) bool {
 	return isMonotone
 }
 
+func (b *MapNode) getFname() string {
+	info, _ := b.file.Stat()
+	fname := info.Name()
+	return fname
+}
+
 // Example of runtime file modification
 func (b *MapNode) readFile() error {
 	if b.file == nil {
@@ -49,7 +55,7 @@ func (b *MapNode) readFile() error {
 
 	scanner := bufio.NewScanner(b.file) // use default Split: ScanLines
 
-	logger.WriteEvent("reading MapNode file ", b.fname)
+	logger.WriteEvent("reading MapNode file ", b.getFname())
 
 	xInterpNew := []float64{}
 	yInterpNew := [][]float64{}
@@ -86,18 +92,22 @@ func (b *MapNode) readFile() error {
 	return nil
 }
 
+// it is assumed that the parsing the file takes some time
+// so we check if it has had an update, this requires "reopening" the file though
 func (b *MapNode) refreshFile() {
-	// reread the time file
+	fname := b.getFname()
+
+	// reread the time file (i.e. update Stat)
 	var openErr error
-	b.file, openErr = reopenFile_(b.fname, b.file)
+	b.file, openErr = reopenFile_(fname, b.file)
 	if openErr != nil {
-		logger.WriteEvent("warning ignoring timefile ", b.fname, ", ", openErr)
+		logger.WriteEvent("warning ignoring timefile ", fname, ", ", openErr)
 		return
 	}
 
 	info, statErr := b.file.Stat()
 	if statErr != nil {
-		logger.WriteEvent("warning ignoring timefile ", b.fname, ", ", statErr)
+		logger.WriteEvent("warning ignoring timefile ", fname, ", ", statErr)
 		return
 	}
 
@@ -210,42 +220,22 @@ func reopenFile_(fname string, file *os.File) (*os.File, error) {
 
 func MapNodeConstructor(name string, words []string) Block {
 	var file *os.File
-	fname := words[0]
-	var err error
-	file, err = reopenFile_(fname, file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// todo: much better argument parser
 	cycle := false
 	discrete := false
-	if len(words) > 1 {
-		if words[1] == "Cycle" {
-			cycle = true
-		} else if words[1] == "Discrete" {
-			discrete = true
-		}
-	}
 
-	if len(words) > 2 {
-		if words[1] == "Cycle" || words[2] == "Cycle" {
-			cycle = true
-		}
+	positional := parser.PositionalArgs(&file)
+	optional := parser.OptionalArgs("Cycle", &cycle, "Discrete", &discrete)
 
-		if words[1] == "Discrete" || words[2] == "Discrete" {
-			discrete = true
-		}
-	}
+	parser.ParseArgs(words, positional, optional)
 
-	if cycle == true {
+	if cycle {
 		logger.WriteEvent("cycling MapNode")
 	}
 
-	b := &MapNode{fname: fname, file: file, cycle: cycle, discrete: discrete}
+	b := &MapNode{file: file, cycle: cycle, discrete: discrete}
 
 	readErr := b.readFile()
-	logger.WriteError("error in MapNodeConstructor: "+fname+" not in valid format", readErr)
+	logger.WriteError("error in MapNodeConstructor: "+b.getFname()+" not in valid format", readErr)
 
 	logger.WriteEvent("constructed MapNode " + name)
 	return b
