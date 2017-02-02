@@ -1,9 +1,9 @@
 package blocks
 
 import (
-	"../logger/"
+	//"../logger/"
+	"../parser/"
 	//"bufio"
-	"errors"
 	"fmt"
 	"net/http"
 	//"os"
@@ -14,12 +14,8 @@ import (
 
 type HttpInput struct {
 	InputBlockData
-	Server       *http.Server
-	tmp          []float64
-	numInput     int
-	numOutput    int
-	addTimeStamp bool // if true then downstream floats have one more then upstream floats
-	// this timeStamp float is not the actual time, it is just marks that a message has been received (so that cached floats can be distinguished from new floats)
+	Server   *http.Server
+	numInput int
 }
 
 func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,20 +30,19 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if len(numberFields) != b.numInput {
 			fmt.Fprintf(w, "error: bad number of inputs")
 		} else {
+			b.Update() // assert that b.out has the correct size
 			for i, v := range numberFields {
 				number, parseErr := strconv.ParseFloat(v, 64)
 				if parseErr == nil {
-					b.tmp[i] = number
+					b.out[i] = number
 				} else {
 					fmt.Fprintf(w, "error: bad number")
 					return
 				}
 			}
 
-			if b.addTimeStamp {
-				b.tmp[b.numOutput-1] = 1.0 - (b.tmp[b.numOutput-1]) // switches between 0 and 1
-			}
-			numberStr := fmt.Sprintln(b.tmp)
+			// send a reply to the client
+			numberStr := fmt.Sprintln(b.out)
 			fmt.Fprintf(w, "%s", numberStr)
 		}
 	} else {
@@ -56,44 +51,26 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *HttpInput) Update() {
-	if len(b.tmp) == b.numOutput {
-		b.in = b.tmp[0:b.numInput]
-		b.out = b.tmp
-	} else {
-		logger.WriteEvent("HttpInput, bad number of inputs ", len(b.tmp), " should be ", b.numOutput)
-		if len(b.out) != b.numOutput {
-			b.out = make([]float64, b.numOutput)
-		}
+	if len(b.out) != b.numInput {
+		b.out = make([]float64, b.numInput)
 	}
+
+	b.in = b.out
 }
 
 func HttpInputConstructor(name string, words []string) Block {
-	if len(words) < 2 {
-		logger.WriteError("HttpInputConstructor()", errors.New("need at least 2 words"))
-	}
-	port := ":" + words[0]
-	numInput, err := strconv.ParseInt(words[1], 10, 64)
-	logger.WriteError("HttpInputConstructor()", err)
+	var port string
+	var numInput int
 
-	addTimeStamp := false
-	numOutput := numInput
-	if len(words) > 2 {
-		if words[2] == "addTimeStamp" {
-			addTimeStamp = true
-			numOutput = numInput + 1
-		} else {
-			logger.WriteError("HttpInputConstructor()", errors.New(words[2]+" not a recognized option"))
-		}
-	}
+	positional := parser.PositionalArgs(&port, &numInput)
+
+	parser.ParsePositionalArgs(words, positional)
 
 	b := &HttpInput{
-		numInput:     int(numInput),
-		tmp:          make([]float64, numOutput), // store incoming data here is it doesn't interfere with the internal Get function
-		addTimeStamp: addTimeStamp,
-		numOutput:    int(numOutput),
+		numInput: int(numInput),
 	}
 	b.Server = &http.Server{
-		Addr:           port,
+		Addr:           ":" + port,
 		Handler:        b,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

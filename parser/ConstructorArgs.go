@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func parsePositionalArgs(args []string, positional []interface{}) {
+func ParsePositionalArgs(args []string, positional []interface{}) {
 	// loop the positional pointers, and store the args
 	//  the positional args must come before the optional args
 	for i, p := range positional {
@@ -34,7 +34,7 @@ func parsePositionalArgs(args []string, positional []interface{}) {
 	}
 }
 
-func parseOptionalArgs(args []string, optional map[string]interface{}) {
+func ParseOptionalArgs(args []string, optional map[string]interface{}) {
 	// loop the args
 	i := 0
 	for i < len(args) {
@@ -102,9 +102,9 @@ func ParseArgs(args []string, positional []interface{}, optional map[string]inte
 		logger.WriteFatal("ConstructorArgs()", errors.New("num args must be greater or equal than "+string(len(positional))))
 	}
 
-	parsePositionalArgs(args[0:len(positional)], positional)
+	ParsePositionalArgs(args[0:len(positional)], positional)
 
-	parseOptionalArgs(args[len(positional):], optional)
+	ParseOptionalArgs(args[len(positional):], optional)
 }
 
 // take a variadic list of pointer arguments and construct a slice containing these pointers
