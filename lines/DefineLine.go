@@ -6,30 +6,34 @@ import (
 	"errors"
 )
 
-type UndefineLine struct {
+type DefineLine struct {
 	LineData
 }
 
 // b0 and b1 have (assumed) equal length
-func (l *DefineLine) Transfer() {
+func (l *UndefineLine) Transfer() {
 	if l.check() {
 		for i, b := range l.b0 {
 			x := b.Get()
-			l.b1[i].Put(x)
 
-			// now overwrite the input block via its Get() with Undefine
-			xUndefined := make([]float64, len(x))
+			isUndefined := false
 			for j := 0; j < len(x); j++ {
-				xUndefined[j] = UNDEFINED
+				if x[j] == UNDEFINED {
+					isUndefined = true
+				}
+				break
 			}
-			b.Put(xUndefined)
+
+			if !isUndefined {
+				l.b1[i].Put(x)
+			}
 		}
 	}
 }
 
-func UndefineLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
+func DefineLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
 	if len(words)%2 == 1 {
-		logger.WriteFatal("UndefineLineConstructor()", errors.New("unpaired lines"))
+		logger.WriteFatal("DefineLineConstructor()", errors.New("unpaired lines"))
 	}
 
 	b0 := []blocks.Block{}
@@ -39,7 +43,7 @@ func UndefineLineConstructor(name string, words []string, b map[string]blocks.Bl
 		b1 = append(b1, getBlock(b, words[i+1]))
 	}
 
-	l := &UndefineLine{
+	l := &DefineLine{
 		LineData{
 			b0:        b0,
 			b1:        b1,
@@ -49,4 +53,4 @@ func UndefineLineConstructor(name string, words []string, b map[string]blocks.Bl
 	return l
 }
 
-var UndefineLineConstructorOk = AddConstructor("UndefineLine", UndefineLineConstructor)
+var DefineLineConstructorOk = AddConstructor("DefineLine", DefineLineConstructor)
