@@ -27,7 +27,21 @@ func ReductionNodeConstructor(name string, words []string) Block {
 	positional := parser.PositionalArgs(&operator)
 	parser.ParsePositionalArgs(words, positional)
 
-	fn := GetReductionNodeOperator(operator)
+	fns := make(map[string](func([]float64) float64))
+	fns["And"] = ReductionNodeAndOperator
+	fns["Or"] = ReductionNodeOrOperator
+
+	var fn func([]float64) float64
+	var ok bool
+	if fn, ok = fns[operator]; !ok {
+		validOperators := ""
+		for key, _ := range fns {
+			validOperators = validOperators + ", " + key
+		}
+
+		logger.WriteFatal("ReductionNodeConstructor()", errors.New("operator "+operator+" not found in \""+validOperators+"\""))
+		return nil
+	}
 
 	b := &ReductionNode{
 		fn: fn,
@@ -35,32 +49,29 @@ func ReductionNodeConstructor(name string, words []string) Block {
 	return b
 }
 
-var ReductionNodeConstructorOk = AddConstructor("ReductionNode", ReductionNodeConstructor)
+// only 0.0 and 1.0 are treated, all other numbers are ignored
+func ReductionNodeAndOperator(x []float64) float64 {
+	y := 1.0
 
-var ReductionNodeOperators map[string](func([]float64) float64)
-
-func AddReductionNodeOperator(operator string, fn func([]float64) float64) bool {
-	var ok bool
-
-	if _, ok := ReductionNodeOperators[operator]; !ok {
-		logger.WriteError("AddReductionNodeOperator()", errors.New("operator already exists"))
-	} else {
-		ReductionNodeOperators[operator] = fn
+	for _, v := range x {
+		if v == 0.0 {
+			y = 0.0
+			break
+		}
 	}
 
-	return ok
+	return y
 }
 
-func GetReductionNodeOperator(operator string) func([]float64) float64 {
-	if fn, ok := ReductionNodeOperators[operator]; ok {
-		return fn
-	} else {
-		validOperators := ""
-		for key, _ := range ReductionNodeOperators {
-			validOperators = validOperators + ", " + key
-		}
+func ReductionNodeOrOperator(x []float64) float64 {
+	y := 0.0
 
-		logger.WriteFatal("GetReductionNodeOperator()", errors.New("operator "+operator+" not found in \""+validOperators+"\""))
-		return nil
+	for _, v := range x {
+		if v == 1.0 {
+			y = 1.0
+			break
+		}
 	}
+
+	return y
 }
