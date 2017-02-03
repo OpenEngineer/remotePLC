@@ -84,12 +84,56 @@ light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
 
 The `UndefineLine` takes the numbers from `HttpInput` and sends them to `n Node`. It then sets the output of `HttpInput` to `UNDEFINED`. The output of `HttpInput` in only updated with defined numbers after a valid new http request.
 
-The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing. This scheme assures that the lights are only switched if a new http request is received.
+The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing. This scheme assures that the lights are only switched when a new http request is received.
 
 ## Example 3
-This example combines an `HttpInput` with a 433MHz receiver. Both inputs are used to switch both Philips Hue lights, and 433MHz lights.
+This example combines an `HttpInput` with a 433MHz receiver. Both inputs are used to switch Philips Hue lights, and 433MHz lights.
 
-The 433MHz protocol uses OOK. An Arduino can be used along with a cheap transmitter and receiver to interface with external 433MHz receivers and transmitters. *remotePLC* includes a protocol that, via a serial port, writes or reads a PWM signal to an Arduino pin.
+The 433MHz lights protocol uses OOK. An Arduino can be used along with a cheap transmitter and receiver to interface with these external 433MHz receivers and transmitters. *remotePLC* includes a protocol that, via a serial port, writes or reads a PWM signal to an Arduino pin, in turn connected to the cheap transmitter or receiver.
+```
+# handle the http input
+in1 HttpInput 8080 3
+UndefineLine in1 n1
+n0 Node
+SplitLine 1 n0 n1 hue1 sat1
+n1 Node
+
+# save the hue and sat state
+hue1 Node; sat1 Node
+DefineLine hue1 hue2; DefineLine sat1 sat2 # only transfer if all numbers are defined
+hue2 Node; sat2 Node
+
+# handle the 433MHz input
+#  the arguments are: 
+#   PORT 
+#   BITRATE 
+#   NUMBYTES 
+#   PULSEWIDTH 
+#   CLEARCOUNT 
+#   TIMEOUTCOUNT 
+#   PULSEMARGIN
+in2 ArduinoPWMInput /dev/ttyACM0 9600 40 200 20 20000 50 | \
+n2 MapNode map_in.dat exact
+
+# combine the inputs
+JoinLine n1 n2 n3
+# numbers smaller or equl to 0.5 are set 0, greater than 0.5 are set to 1
+# UNDEFINED numbers are left unchanged
+n3 IfElseElseNode 0 0.5 1 | \
+n4 ReductionNode Or # 0, UNDEFINED, or 1
+
+# write to the Philips Hue lights
+JoinLine n4 hue1 sat1 n5
+n5 Node
+ForkLine n5 light1 light2 light3
+light1 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 1
+light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
+light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
+
+# write to the 433Mhz lights
+DefineLine n4 n6
+n6 MapNode map_out.dat exact | lights433MHz ArduinoPWMOutput /dev/ttyACM0 9600 200 20 5
+```
 
 ## documentation
 see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
