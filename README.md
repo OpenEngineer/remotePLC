@@ -135,6 +135,10 @@ DefineLine n4 n6
 n6 MapNode map_out.dat exact | lights433MHz ArduinoPWMOutput /dev/ttyACM0 9600 200 20 5
 ```
 
+Long configurations like this are a form of meta-programming, and bugs can quickly be introduced. That is why a data log is written every few cycles. This log contains a column for every number (if not hidden). For arrays containing more than one number, an index subscript is added to the block name in the log header.
+
+Once a configuration has been debugged an underscore can be appended to the names of the *blocks*, this limits the amount of data being written. The underscores don't need to be added to every occurance of that blockname in the configuration though. The *lines* see regular names and underscores as identifiers of the same *block*, the underscore only acts as a hiding marker.
+
 ## documentation
 see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
 
