@@ -1,10 +1,26 @@
-# remotePLC
-Soft plc, configurable through text files. Inspired by Matlab Simulink and its deficiencies.
+# remotePLC: user's guide
 
-# documentation
+## Synopsis
+Soft plc, configurable through a text file. Inspired by Matlab Simulink.
+
+Specify *blocks* and connect them with *lines*. The *blocks* process arrays of floats, and the *lines* pass these floats between the *blocks*.
+
+## Usage
+```
+remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
+```
+
+* FILE_NAME: name of configuration file, described below
+* CMD_NAME: string of commands, in same format as file
+* DELTA_T: cycle time
+* LOG_INTERVAL: save a record to the log every LOG_INTERVAL cycles
+
+## Example 1
+
+## documentation
 see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
 
-# compile and install
+## compile and install
 In package root directory:
 ```
 > make.sh
