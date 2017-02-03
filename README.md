@@ -82,10 +82,14 @@ light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
 light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
 ```
 
-The `UndefineLine` takes the numbers from `HttpInput` and sends them to `Node n`. Then the output of `HttpInput` is set to `UNDEFINED`. The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing.
-This scheme assures that the lights are only switched if a new http request is received.
+The `UndefineLine` takes the numbers from `HttpInput` and sends them to `n Node`. It then sets the output of `HttpInput` to `UNDEFINED`. The output of `HttpInput` in only updated with defined numbers after a valid new http request.
+
+The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing. This scheme assures that the lights are only switched if a new http request is received.
 
 ## Example 3
+This example combines an `HttpInput` with a 433MHz receiver. Both inputs are used to switch both Philips Hue lights, and 433MHz lights.
+
+The 433MHz protocol uses OOK. An Arduino can be used along with a cheap transmitter and receiver to interface with external 433MHz receivers and transmitters. *remotePLC* includes a protocol that, via a serial port, writes or reads a PWM signal to an Arduino pin.
 
 ## documentation
 see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
