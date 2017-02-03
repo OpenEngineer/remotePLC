@@ -53,12 +53,14 @@ var ReductionNodeConstructorOk = AddConstructor("ReductionNode", ReductionNodeCo
 
 // only 0.0 and 1.0 are treated, all other numbers are ignored
 func ReductionNodeAndOperator(x []float64) float64 {
-	y := 1.0
+	y := UNDEFINED
 
 	for _, v := range x {
 		if v == 0.0 {
 			y = 0.0
 			break
+		} else if v == 1.0 && y == UNDEFINED {
+			y = v
 		}
 	}
 
@@ -66,12 +68,14 @@ func ReductionNodeAndOperator(x []float64) float64 {
 }
 
 func ReductionNodeOrOperator(x []float64) float64 {
-	y := 0.0
+	y := UNDEFINED
 
 	for _, v := range x {
 		if v == 1.0 {
 			y = 1.0
 			break
+		} else if v == 0.0 && y == UNDEFINED {
+			y = 0.0
 		}
 	}
 

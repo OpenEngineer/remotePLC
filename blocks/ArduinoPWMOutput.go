@@ -12,7 +12,23 @@ type ArduinoPWMOutput struct {
 	question ArduinoPWMPacket
 }
 
+func (b *ArduinoPWMOutput) InputIsUndefined() bool {
+	isUndefined := false
+
+	for _, v := range b.in {
+		if v == UNDEFINED {
+			isUndefined = true
+		}
+	}
+
+	return isUndefined
+}
+
 func (b *ArduinoPWMOutput) Update() {
+	if b.InputIsUndefined() {
+		return
+	}
+
 	numBytes := len(b.in)
 	b.question.Header1.NumBytes = uint8(numBytes)
 
