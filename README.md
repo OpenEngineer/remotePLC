@@ -73,16 +73,16 @@ In this example three numbers from an http request are sent as a brightness, hue
 ```
 x HttpInput 8080 3
 
-l1 UndefineLine x n
+UndefineLine x n
 n Node
-l2 ForkLine n light1 light2 light3
+ForkLine n light1 light2 light3
 
 light1 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 1
 light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
 light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
 ```
 
-The `UndefineLine` *line* takes the numbers from `HttpInput` and sends them to `Node n`. Then the output of `HttpInput` is set to `UNDEFINED`. The `PhilipsHueOutput` *blocks* detects `UNDEFINED` numbers and does nothing.
+The `UndefineLine` takes the numbers from `HttpInput` and sends them to `Node n`. Then the output of `HttpInput` is set to `UNDEFINED`. The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing.
 This scheme assures that the lights are only switched if a new http request is received.
 
 ## Example 3
