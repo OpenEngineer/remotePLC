@@ -1,19 +1,19 @@
 # remotePLC: user's guide
 
 ## Synopsis
-Soft plc, configurable through a text file. Inspired by Matlab Simulink.
+This is a *soft* plc program. It is configured through a text file.
 
-Specify *blocks* and connect them with *lines*. The *blocks* process arrays of floats, and the *lines* pass these floats between the *blocks*.
+You specify *blocks* and connect them with *lines*. The *blocks* process arrays of floats, and the *lines* pass these arrays between the *blocks*.
 
 ## Usage
 ```
 remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
 ```
 
-* FILE_NAME: name of configuration file, described below
-* CMD_NAME: string of commands, in same format as file
-* DELTA_T: cycle time
-* LOG_INTERVAL: save a record to the log every LOG_INTERVAL cycles
+* `FILE_NAME`     name of configuration file, described below
+* `CMD_NAME`      string of commands, in same format as file
+* `DELTA_T`       plc cycle time
+* `LOG_INTERVAL`  save a record to the log every this many cycles
 
 ## Example 1
 
