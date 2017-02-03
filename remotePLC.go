@@ -34,18 +34,22 @@ func main() {
 }
 
 func parseArgs() (cmdString, fname string, timeStep time.Duration, saveInterval int) {
-	// compile the flags
+	// compile the optional flags
 	cmdStringPtr := flag.String("c", "", "blocks semicolon separated, appended to list of blocks")
-	fnamePtr := flag.String("f", "blocks.cfg", "file with list of blocks (default: blocks.cfg)")
 	t := flag.String("t", "250ms", "length of cycle in [ms]")
 	s := flag.Int("s", 4, "save interval in number of cycles")
-
-	// TODO: add more flags
 	flag.Parse()
 
-	// convert to correct datatypes
+	// hande the positional arguments
+	positional := flag.Args()
+	if len(positional) == 1 {
+		fname = positional[0]
+	} else {
+		logger.WriteFatal("parseArgs()", errors.New("Error: no fname specified"))
+	}
+
+	// convert the optional arguments to the correct datatypes
 	cmdString = *cmdStringPtr
-	fname = *fnamePtr
 
 	var timeErr error
 	timeStep, timeErr = time.ParseDuration(*t)
