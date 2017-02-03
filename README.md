@@ -26,7 +26,7 @@ remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
 * `LOG_INTERVAL`  save a record to the log every this many cycles
 
 ## Example 1
-The configuration file in this example takes three numbers from an HTTP GET request on port 8080, then these are written to the 0th position of a file:
+The configuration file in this example takes three numbers from an HTTP GET request on port 8080, then these are written to the 0th position of `output.dat`:
 ```
 x HttpInput 8080 3
 l Line x y
@@ -63,12 +63,30 @@ x HttpInput 8080 3 | \ # this block listens for http requests of the form: http:
 # starting at the 0th position:
 y FileOutput output.dat 
 ```
-The output arrays of *blocks* or *lines* with names ending with an underscore (eg. `x_`), are not saved in the data log:
+The output arrays of *blocks* or *lines*, with names ending with an underscore (eg. `x_`), are not saved in the data log:
 ```
 x_ HttpInput 8080 3 | y_ FileOutput output.dat # no data is logged
 ```
 
 ## Example 2
+In this example three numbers from an http request are sent as a brightness, hue, and saturation value to three Philips Hue lights. In order not to interfere with the smart phone app, the three values are only sent after a new valid http request has been received:
+```
+x HttpInput 8080 3
+
+l1 UndefineLine x n
+n Node
+l2 ForkLine n light1 light2 light3
+
+light1 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 1
+light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
+light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
+```
+
+The `UndefineLine` *line* takes the numbers from `HttpInput` and sends them to `Node n`. Then the output of `HttpInput` is set to `UNDEFINED`. The `PhilipsHueOutput` *blocks* detects `UNDEFINED` numbers and does nothing.
+This scheme assures that the lights are only switched if a new http request is received.
+
+## Example 3
+
 ## documentation
 see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
 
