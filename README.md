@@ -5,6 +5,13 @@ This is a *soft* plc program. It is configured through a text file.
 
 You specify *blocks* and connect them with *lines*. The *blocks* process arrays of floats, and the *lines* pass these arrays between the *blocks*.
 
+There are four types of *blocks*:
+
+* input blocks (remote sensors, switches...)
+* stateless node blocks (math operators, bool operators...)
+* logic blocks (PID controls, time shift delays...)
+* output blocks (actuators, lights...)
+
 ## Usage
 ```
 remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
