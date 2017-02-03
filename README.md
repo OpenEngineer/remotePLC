@@ -32,7 +32,7 @@ x HttpInput 8080 3
 l Line x y
 y FileOutput output.dat
 ```
-Note how a block and line specification has the following format:
+Note how *block* and *line* specifications have the following format:
 ```
 NAME BLOCK_TYPE BLOCK_ARGS
 ```
@@ -42,23 +42,30 @@ x HttpInput 8080 3
 Line x y
 y FileOutput output.dat
 ```
-If the *line* simply connects the input of one block to the output of another, you can substitute it by a *pipe* character. So the following configuration is also equivalent:
+If the *line* simply connects the input of one *block* to the output of another, you can substitute it by a *pipe* character. So the following configuration is also equivalent:
 ```
 x HttpInput 8080 3 | y FileOutput output.dat
 ```
-Because long lines can be difficult to read, you can split it using a *newline* character:
+Because long text lines can be difficult to read, you can split them using a *newline* character:
 ```
 x HttpInput 8080 3 | \
 y FileOutput output.dat
 ```
-Finally you can add comments and empty lines for readability:
+You can add comments and empty lines for readability:
 ```
 # take three input numbers and send them to output.dat
 
-x HttpInput 8080 3 | \ # this listens for http requests
+x HttpInput 8080 3 | \ # this block listens for http requests of the form: http://127.0.0.1:8080/1.0,2.0,3.0
 
-y FileOutput output.dat # this puts the numbers, separated by spaces, into output.dat, 
-# starting at the 0th position
+# (this is bad usage of empty lines, but works)
+
+# this block puts the numbers, separated by spaces, into output.dat, 
+# starting at the 0th position:
+y FileOutput output.dat 
+```
+The output arrays of *blocks* or *lines* with names ending with an underscore (eg. `x_`), are not saved in the data log:
+```
+x_ HttpInput 8080 3 | y_ FileOutput output.dat # no data is logged
 ```
 
 ## Example 2
