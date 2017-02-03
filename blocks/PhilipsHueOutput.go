@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-type PhilipsHueBridgeOutput struct {
+type PhilipsHueOutput struct {
 	OutputBlockData
 	lightNo string
 	uriGet  string
@@ -120,7 +120,7 @@ func getPhilipsHueSat(x float64) int {
 	return sat
 }
 
-func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) map[string]interface{} {
+func updatePhilipsHueState(oldState map[string]interface{}, x []float64) map[string]interface{} {
 	newState := make(map[string]interface{})
 
 	// use only the first value of the input for the brightness
@@ -166,7 +166,7 @@ func updatePhilipsHueBridgeState(oldState map[string]interface{}, x []float64) m
 }
 
 // TODO: general function into blocks
-func (b *PhilipsHueBridgeOutput) InputIsUndefined() bool {
+func (b *PhilipsHueOutput) InputIsUndefined() bool {
 	isUndefined := false
 
 	for _, v := range b.in {
@@ -179,7 +179,7 @@ func (b *PhilipsHueBridgeOutput) InputIsUndefined() bool {
 }
 
 // herein any http errors are ignored:
-func (b *PhilipsHueBridgeOutput) Update() {
+func (b *PhilipsHueOutput) Update() {
 	// stops update immediately
 	if b.InputIsUndefined() {
 		return
@@ -192,7 +192,7 @@ func (b *PhilipsHueBridgeOutput) Update() {
 
 	if err == nil {
 		oldState := oldStates[b.lightNo].(map[string]interface{})["state"].(map[string]interface{})
-		newState := updatePhilipsHueBridgeState(oldState, b.in) // minimal state message that modifies the PhilipsHue
+		newState := updatePhilipsHueState(oldState, b.in) // minimal state message that modifies the PhilipsHue
 
 		// now put the state
 		if len(newState) > 0 {
@@ -205,7 +205,7 @@ func (b *PhilipsHueBridgeOutput) Update() {
 	}
 }
 
-func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
+func PhilipsHueOutputConstructor(name string, words []string) Block {
 	ipaddr := words[0]
 	username := words[1]
 	lightNo := words[2]
@@ -217,7 +217,7 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	// get the list of lights
 	states, getErr := getHttpJson(uriGet)
 	if getErr != nil {
-		log.Fatal("in PhilipsHueBridgeOutputConstructior(), failed to get states. Could be bad url. ", getErr)
+		log.Fatal("in PhilipsHueOutputConstructior(), failed to get states. Could be bad url. ", getErr)
 	}
 
 	if _, isError := states["error"]; isError {
@@ -234,12 +234,12 @@ func PhilipsHueBridgeOutputConstructor(name string, words []string) Block {
 	}
 
 	if !isFound {
-		log.Fatal("in PhilipsHueBridgeOutputConstructor, error: couldnt find light ", lightNo)
+		log.Fatal("in PhilipsHueOutputConstructor, error: couldnt find light ", lightNo)
 	}
 
 	// get the general state
-	b := &PhilipsHueBridgeOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut}
+	b := &PhilipsHueOutput{lightNo: lightNo, uriGet: uriGet, uriPut: uriPut}
 	return b
 }
 
-var PhilipsHueBridgeOutputOk = AddConstructor("PhilipsHueBridgeOutput", PhilipsHueBridgeOutputConstructor)
+var PhilipsHueOutputOk = AddConstructor("PhilipsHueOutput", PhilipsHueOutputConstructor)
