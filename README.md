@@ -12,6 +12,8 @@ There are four types of *blocks*:
 * logic blocks (PID controls, time shift delays...)
 * output blocks (actuators, lights...)
 
+By configuring and connecting *blocks* in the right way you can automate your outputs based on user and environment inputs.
+
 ## Usage
 ```
 remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
