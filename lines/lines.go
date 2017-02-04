@@ -66,6 +66,7 @@ func (l *LineData) check() bool {
 
 	for i, b := range l.b0 {
 		if l.n0[i] != len(b.Get()) {
+			fmt.Println(b.Get(), l.DebugName)
 			ok = false
 			expected = l.n0[i]
 			actual = len(b.Get())

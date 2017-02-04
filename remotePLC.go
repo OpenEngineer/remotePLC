@@ -65,11 +65,12 @@ func readTables(cmdString, fname string) (map[string][][]string, [][]string) {
 	var t_ parser.ConstructorTable
 	t := &t_
 
-	t.ReadAppendFile(fname, []string{"\n", EXTRA_NEWLINE_CHAR})
+	t.ReadAppendFile(fname, []string{"\n"})
 	t.ReadAppendString(cmdString, []string{"\n", EXTRA_NEWLINE_CHAR})
 
 	t.RemoveComments(COMMENT_CHAR)
 	t.RemoveEmptyRows(1)
+	t.SplitAllLines(EXTRA_NEWLINE_CHAR)
 	t.MergeRows(MERGE_CHAR)
 	t.WordToLine(PIPE_CHAR)
 	t.Print()

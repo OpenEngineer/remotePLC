@@ -1,6 +1,5 @@
-# remotePLC: user's guide
+# remotePLC
 
-## Synopsis
 This is a *soft* PLC program. It is configured through a text file.
 
 You specify *blocks* and connect them with *lines*. The *blocks* process arrays of 64 bit floating point numbers, and the *lines* pass these arrays between the *blocks*.
@@ -24,6 +23,8 @@ remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
 * `CMD_NAME`      string of commands, in same format as file
 * `DELTA_T`       PLC cycle time
 * `LOG_INTERVAL`  save a record to the log every this many cycles
+
+# Examples 
 
 ## Example 1
 The configuration file in this example takes three numbers from an HTTP GET request on port 8080, then these are written to the 0th position of `output.dat`:
@@ -93,15 +94,12 @@ The 433MHz lights protocol uses OOK. An Arduino can be used along with a cheap t
 ```
 # handle the http input
 in1 HttpInput 8080 3
-UndefineLine in1 n1
-n0 Node
-SplitLine 1 n0 n1 hue1 sat1
-n1 Node
+SplitLine 1 in1 switch1 hue sat
+switch1_ Node
 
 # save the hue and sat state
-hue1 Node; sat1 Node
-DefineLine hue1 hue2; DefineLine sat1 sat2 # only transfer if all numbers are defined
-hue2 Node; sat2 Node
+hue_ DefineLogic 0.1 #default values
+sat_ DefineLogic 0.1
 
 # handle the 433MHz input
 #  the arguments are: 
@@ -112,43 +110,60 @@ hue2 Node; sat2 Node
 #   CLEARCOUNT 
 #   TIMEOUTCOUNT 
 #   PULSEMARGIN
-in2 ArduinoPWMInput /dev/ttyACM0 9600 40 200 20 20000 50 | \
-n2 MapNode map_in.dat exact
+in2_ ArduinoPWMInput /dev/ttyACM0 9600 40 210 30 20000 30 | \
+switch2_ MapNode map_in.dat 40 1 Mode exact
 
 # combine the inputs
-JoinLine n1 n2 n3
+JoinLine switch1 switch2 zero_or_one
 # numbers smaller or equl to 0.5 are set 0, greater than 0.5 are set to 1
 # UNDEFINED numbers are left unchanged
-n3 IfElseElseNode 0 0.5 1 | \
-n4 ReductionNode Or # 0, UNDEFINED, or 1
+zero_or_one_ IfElseElseNode 0 0.5 1 | \
+switch_ ReductionNode Or # 0, UNDEFINED, or 1
 
 # write to the Philips Hue lights
-JoinLine n4 hue1 sat1 n5
-n5 Node
-ForkLine n5 light1 light2 light3
+JoinLine switch_ hue sat ph_state
+ph_state Node
+ForkLine ph_state light1 light2 light3
 light1 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 1
 light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
 light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
 
 # write to the 433Mhz lights
-DefineLine n4 n6
-n6 MapNode map_out.dat exact | lights433MHz ArduinoPWMOutput /dev/ttyACM0 9600 200 20 5
+Line switch rf_state
+rf_state_ MapNode map_out.dat 1 40 Mode exact | relay1_ ArduinoPWMOutput /dev/ttyACM0 9600 210 30 10
+```
+
+`map_in.dat` and `map_out.dat` can contain comments and can look like:
+```
+# off code
+128   5   2 129  64 129  80  40  20   8 20  10 129   2 160  64 160  84  10   5   2 129  64 160  80  40  20  10   5   2 129  64 160  80  32  84  10   4   0   0               0
+# on code
+128   5   2 129  64 129  80  40  20   8 20  10 129   2 160  64 160  84  10   5   2 129  64 160  80  40  20  10   5   2 129  64 129  80  32  84  10   4   0   0               1
 ```
 
 Long configurations like this are a form of meta-programming, and bugs can quickly be introduced. That is why a data log is written every few cycles. This log contains a column for every number (if not hidden). For arrays containing more than one number, an index subscript is added to the block name in the log header.
 
 Once a configuration has been debugged an underscore can be appended to the names of the *blocks*, this limits the amount of data being written. The underscores don't need to be added to every occurance of that blockname in the configuration though. The *lines* see regular names and underscores as identifiers of the same *block*, the underscore only acts as a hiding marker.
 
-## documentation
-see doc/remotePLC.pdf. I will move the introductory stuff to this readme.
-
-## compile and install
-In package root directory:
+## Installation
+Download this repository:
 ```
-> make.sh
-> static build: make.sh -s
+git clone https://github.com/christianschmitz/remotePLC remotePLC
 ```
-copies to ~/bin/ if this directory exists
+Make sure you have the golang dev tools install, for example with aptitude:
+```
+sudo apt-get install golang
+```
+Go into the repository root directory, and run the compilation script:
+```
+cd ./remotePLC
+./make.sh
+```
+For statically linked compilation:
+```
+./make.sh -s
+```
+This script also copies the *remotePLC* binary to $HOME/bin if this directory exists.
 
 # internet of things:
 * Philips Hue Bridge supported, user needs to specify an IP address and a user string (see Philips Hue API reference). I included a script in ./tutorials/philipsHue/ that can return these
@@ -164,3 +179,22 @@ GPL3
 # TODO:
 * automatic documentation
 * compilation for MS Windows
+
+# Developer's guide
+
+All blocks can expect upstream arrays of constant length, and must generate downstream arrays of constant length. This is because some blocks depend on positional numbers, and any change in length anywhere in the configuration can generate errors in those blocks.
+
+## Input blocks
+Input blocks should return actions, and not states: eg. "I flipped a switch", and not "the switch is on". This is because it is easier to turn actions into states than vice versa.
+
+There are two types of input blocks:
+
+1. Polling type
+2. Serving type
+
+A reply to a poll can be considered an action, eg. a reading of a sensor.
+A request to a server can also be considered an action, eg. change light state via http request.
+
+Switches will be idle most of the time. For this *actionless* state, the downstream arrays should be set to `UNDEFINED`.
+
+For polling inputs with high latency, or any serving inputs, the polling/serving function should run in the background. This function should be launched upon construction of the input block and set to loop infinitely by itself. The `Update()` function should then poll the output of the polling/serving function via an intermediate array.

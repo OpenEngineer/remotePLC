@@ -3,7 +3,8 @@ package blocks
 import (
 	"../logger/"
 	//"fmt"
-	"strconv"
+	"../parser/"
+	"time"
 )
 
 type SerialInput struct {
@@ -12,37 +13,55 @@ type SerialInput struct {
 	numInput int
 }
 
-func (b *SerialInput) Update() {
-	bytes, _ := ReceiveAllSerialBytes(b.address)
+func (b *SerialInput) Poll() {
+	bytes, _ := ReceiveAllSerialBytes(b.address) // assumed to have some delay
 	n := len(bytes)
 
 	// convert to floats
-	tmp := make([]float64, b.numInput)
+	b.in = MakeUndefined(b.numInput)
 	if n == b.numInput {
-		for i, _ := range tmp {
-			tmp[i] = float64(bytes[n-b.numInput+i]) // use last packet in buffer
+		for i, _ := range b.in {
+			b.in[i] = float64(bytes[n-b.numInput+i]) // use last packet in buffer
 		}
-		b.out = tmp
-	} else { // return an array with zeros
-		b.out = tmp
 	}
-	b.in = b.out
-
-	//fmt.Println(b.out)
 }
 
-func SerialInputConstructor(name string, words []string) Block {
-	address := words[0]
-	bitRate, err := strconv.ParseInt(words[1], 10, 64)
-	logger.WriteError("SerialInputConstructor()", err)
+func (b *SerialInput) Update() {
+	if len(b.in) == b.numInput {
+		b.out = SafeCopy(b.numInput, b.in, b.numInput)
+	} else {
+		b.out = MakeUndefined(b.numInput)
+	}
 
-	numInput, numInputErr := strconv.ParseInt(words[2], 10, 64)
-	logger.WriteError("SerialInputConstructor()", numInputErr)
+	b.in = MakeUndefined(b.numInput) // only a new poll reply gives us defined numbers
+}
+
+// TODO: add delay
+func SerialInputConstructor(name string, words []string) Block {
+	var address string
+	var bitRate int
+	var numInput int
+	var periodString string
+
+	positional := parser.PositionalArgs(&address, &bitRate, &numInput, &periodString)
+	parser.ParsePositionalArgs(words, positional)
 
 	configId := 0
-	MakeSerialPort(address, int(bitRate), configId)
+	MakeSerialPort(address, bitRate, configId)
 
-	b := &SerialInput{address: address, numInput: int(numInput)}
+	b := &SerialInput{address: address, numInput: numInput}
+
+	// poll infinitely in the background
+	period, err := time.ParseDuration(periodString)
+	logger.WriteError("SerialInputConstructor()", err)
+	go func() {
+		ticker := time.NewTicker(period)
+		for {
+			<-ticker.C
+			b.Poll()
+		}
+	}()
+
 	return b
 }
 

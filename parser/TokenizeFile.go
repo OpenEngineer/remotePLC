@@ -10,6 +10,7 @@ func TokenizeFile(fname string) [][]string {
 
 	tokens.ReadAppendFile(fname, []string{"\n"})
 	tokens.RemoveComments(COMMENT_CHAR)
+	tokens.RemoveEmptyRows(1)
 
 	return tokens
 }

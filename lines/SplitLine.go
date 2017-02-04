@@ -3,8 +3,9 @@ package lines
 import (
 	"../blocks/"
 	"../logger/"
+	"../parser/"
+	"fmt"
 	//"errors"
-	"strconv"
 )
 
 type SplitLine struct {
@@ -22,7 +23,8 @@ func (l *SplitLine) Transfer() {
 
 			//fmt.Println(i0, i1, len(b.in), len(b.b1))
 			if i0 > len(x)-1 {
-				logger.WriteEvent("warning, SplitLine.Update(): too few output blocks")
+				fmt.Println(x)
+				logger.WriteEvent("warning, SplitLine.Update(): too little input, got ", len(x))
 				break
 			}
 
@@ -37,8 +39,9 @@ func (l *SplitLine) Transfer() {
 }
 
 func SplitLineConstructor(name string, words []string, b map[string]blocks.Block) Line {
-	nf, errInt := strconv.ParseInt(words[0], 10, 64)
-	logger.WriteError("SplitLineConstructor()", errInt)
+	var nf int
+	positional := parser.PositionalArgs(&nf)
+	parser.ParsePositionalArgs(words, positional)
 
 	b0 := getBlock(b, words[1])
 	b1 := getBlocks(b, words[2:])

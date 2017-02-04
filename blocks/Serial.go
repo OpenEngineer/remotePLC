@@ -6,7 +6,7 @@ import (
 	"../external/serial"
 	"../logger/"
 	"errors"
-	"fmt"
+	//"fmt"
 	"time"
 )
 
@@ -223,7 +223,7 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int, deadline
 
 		_, errWrite = p.p.Write(bytes)
 
-		fmt.Println("sent     ", bytes)
+		//fmt.Println("sent     ", bytes)
 		if errWrite != nil {
 			logger.WriteError("SendReceiveSerialBytes(), write", errWrite)
 			return []byte{}, errWrite

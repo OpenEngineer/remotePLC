@@ -54,7 +54,6 @@ func ParseOptionalArgs(args []string, optional map[string]interface{}) {
 			// check and assert type
 			switch p := p.(type) {
 			case *int64:
-				i = i + 1
 				if i < len(args) {
 					var v int64
 					v, err = strconv.ParseInt(args[i], 10, 64)
@@ -62,8 +61,8 @@ func ParseOptionalArgs(args []string, optional map[string]interface{}) {
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
-			case *int:
 				i = i + 1
+			case *int:
 				if i < len(args) {
 					var v int64
 					v, err = strconv.ParseInt(args[i], 10, 64)
@@ -71,8 +70,8 @@ func ParseOptionalArgs(args []string, optional map[string]interface{}) {
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
-			case *float64:
 				i = i + 1
+			case *float64:
 				if i < len(args) {
 					var v float64
 					v, err = strconv.ParseFloat(args[i], 64)
@@ -80,13 +79,14 @@ func ParseOptionalArgs(args []string, optional map[string]interface{}) {
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
-			case *string:
 				i = i + 1
+			case *string:
 				if i < len(args) {
 					*p = args[i]
 				} else {
 					err = errors.New("premature end of constructor args, arg to option " + option + " not found")
 				}
+				i = i + 1
 			case *bool:
 				*p = true
 			default:
@@ -125,7 +125,7 @@ func PositionalArgs(ptrs ...interface{}) (positional []interface{}) {
 
 // take a variadic paired list of strings and pointers and construct a map
 // key string first, obj ptr second
-func OptionalArgs(objs ...interface{}) (optional map[string]interface{}) {
+func OptionalArgs(objs ...interface{}) map[string]interface{} {
 	// collect the inputs
 	var keys []string
 	var ptrs []interface{}
@@ -142,7 +142,8 @@ func OptionalArgs(objs ...interface{}) (optional map[string]interface{}) {
 		}
 	}
 
-	// now make the map
+	// now make and fill the map
+	optional := make(map[string]interface{})
 	for i, key := range keys {
 		optional[key] = ptrs[i]
 	}

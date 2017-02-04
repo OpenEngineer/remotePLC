@@ -4,6 +4,7 @@ import (
 	"../logger/"
 	"../parser/"
 	"errors"
+	//"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -32,6 +33,7 @@ type MapNode struct {
 // Example of runtime file modification
 func (b *MapNode) readFile() error {
 	tokens := parser.TokenizeFile(b.fname)
+	//fmt.Println("parsed file as: ", tokens)
 
 	// temporary storage to check for validity
 	xInterpTmp := [][]float64{}
@@ -70,6 +72,7 @@ func (b *MapNode) readFile() error {
 			}
 
 		} else {
+			logger.WriteEvent(b.fname, " contains row not of length ", b.numInput+b.numOutput, " (but ", len(l), ")")
 			isOk = false
 			break
 		}
@@ -79,7 +82,7 @@ func (b *MapNode) readFile() error {
 	}
 
 	if !isOk {
-		return errors.New("warnng: invalid MapNode, ignoring")
+		return errors.New("warning: invalid MapNode, ignoring")
 	} else {
 		b.xInterp = xInterpTmp
 		b.yInterp = yInterpTmp
@@ -236,6 +239,7 @@ func (b *MapNode) Exact(x []float64) []float64 {
 		for j, vv := range v {
 			if vv != x[j] {
 				isExactLocal = false
+				//fmt.Println("broke exactness at ", vv, " vs ", x[j], "at pos ", j)
 				break
 			}
 		}
@@ -243,6 +247,7 @@ func (b *MapNode) Exact(x []float64) []float64 {
 		if isExactLocal {
 			isExact = true
 			iExact = i
+			//fmt.Println("found an exact match at line ", i)
 			break
 		}
 	}
@@ -305,9 +310,12 @@ func reopenFile_(fname string, file *os.File) (*os.File, error) {
 
 func MapNodeConstructor(name string, words []string) Block {
 	var fname string
-	mode := "interpolate" // or possible values are "nearest" and "exact"
+	var numInput int
+	var numOutput int
+	var mode string
+	mode = "interpolate" // or possible values are "nearest" and "exact"
 
-	positional := parser.PositionalArgs(&fname)
+	positional := parser.PositionalArgs(&fname, &numInput, &numOutput)
 	optional := parser.OptionalArgs("Mode", &mode)
 
 	parser.ParseArgs(words, positional, optional)
@@ -317,7 +325,13 @@ func MapNodeConstructor(name string, words []string) Block {
 	file, err = reopenFile_(fname, file)
 	logger.WriteError("MapNodeConstructor()", err)
 
-	b := &MapNode{fname: fname, file: file, mode: mode}
+	b := &MapNode{
+		fname:     fname,
+		file:      file,
+		numInput:  numInput,
+		numOutput: numOutput,
+		mode:      mode,
+	}
 
 	readErr := b.readFile()
 	logger.WriteError("error in MapNodeConstructor: "+b.fname+" not in valid format", readErr)

@@ -26,23 +26,22 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		numberFields := strings.Split(lastField, ",")
 
 		// distrust the network users and ignore the message if it doesn't match the number of expected fields
-		//  DoD attacks are always possible
+		// (DoS attacks are always possible)
 		if len(numberFields) != b.numInput {
 			fmt.Fprintf(w, "error: bad number of inputs")
 		} else {
-			b.Update() // assert that b.out has the correct size
 			for i, v := range numberFields {
 				number, parseErr := strconv.ParseFloat(v, 64)
 				if parseErr == nil {
-					b.out[i] = number
+					b.in[i] = number
 				} else {
 					fmt.Fprintf(w, "error: bad number")
 					return
 				}
 			}
 
-			// send a reply to the client
-			numberStr := fmt.Sprintln(b.out)
+			// send an echoed reply to the client as a sign of success
+			numberStr := fmt.Sprintln(b.in)
 			fmt.Fprintf(w, "%s", numberStr)
 		}
 	} else {
@@ -51,11 +50,13 @@ func (b *HttpInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *HttpInput) Update() {
-	if len(b.out) != b.numInput {
-		b.out = make([]float64, b.numInput)
+	if len(b.in) == b.numInput {
+		b.out = SafeCopy(b.numInput, b.in, b.numInput)
+	} else {
+		b.out = MakeUndefined(b.numInput)
 	}
 
-	b.in = b.out
+	b.in = MakeUndefined(b.numInput) // only a new client request can give us new defined numbers
 }
 
 func HttpInputConstructor(name string, words []string) Block {
@@ -67,7 +68,7 @@ func HttpInputConstructor(name string, words []string) Block {
 	parser.ParsePositionalArgs(words, positional)
 
 	b := &HttpInput{
-		numInput: int(numInput),
+		numInput: numInput,
 	}
 	b.Server = &http.Server{
 		Addr:           ":" + port,

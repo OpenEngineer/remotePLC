@@ -25,6 +25,9 @@ func getHttpJson(uri string) (data map[string]interface{}, err error) {
 	logger.WriteError("getHttpJson()", responseErr)
 
 	err = responseErr
+	if err != nil {
+		return nil, err
+	}
 
 	defer response.Body.Close()
 
@@ -87,7 +90,7 @@ func getPhilipsHueBri(x float64) (on bool, bri int) {
 		bri = 254 // maximum value
 	}
 
-	if x < 0.0 {
+	if x <= 0.0 {
 		on = false
 	} else {
 		on = true

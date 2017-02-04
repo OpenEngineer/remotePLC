@@ -59,6 +59,22 @@ func splitLines(linesIn []string, fs string) (linesOut []string) {
 	return
 }
 
+func (t *ConstructorTable) SplitAllLines(fs string) {
+	var tmp [][]string
+
+	for _, l := range *t {
+		lJoined := strings.Join(l, " ")
+
+		split := strings.Split(lJoined, fs)
+
+		for _, s := range split {
+			tmp = append(tmp, strings.Fields(s))
+		}
+	}
+
+	*t = tmp
+}
+
 func (t *ConstructorTable) RemoveComments(commentChar string) {
 	var tmp [][]string
 

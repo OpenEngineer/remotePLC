@@ -11,7 +11,7 @@ type DefineLine struct {
 }
 
 // b0 and b1 have (assumed) equal length
-func (l *UndefineLine) Transfer() {
+func (l *DefineLine) Transfer() {
 	if l.check() {
 		for i, b := range l.b0 {
 			x := b.Get()

@@ -9,9 +9,6 @@ import (
 
 func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 	logRegexp string) {
-	logger.WriteEvent("starting input loop...")
-	g.CycleInfinite([]string{"inputs"}, timeStep, 10) // same rate as main loop
-	logger.WriteEvent("starting input loop ok")
 
 	// Main loop
 	ticker := time.NewTicker(timeStep)
@@ -20,6 +17,7 @@ func controlLoop(g *graph.Graph, timeStep time.Duration, saveInterval int,
 	stopValue := 0.0
 	for stopValue > -1.0 && stopValue < 1.0 {
 		<-ticker.C
+		g.CycleParallel([]string{"inputs"})
 
 		g.CycleLines()
 

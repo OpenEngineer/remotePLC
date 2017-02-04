@@ -1,5 +1,7 @@
 package blocks
 
+import ()
+
 type Node struct {
 	BlockData
 }

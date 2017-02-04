@@ -48,12 +48,25 @@ func SafeCopy(numCopy int, src []float64, numDst int) []float64 {
 	return dst
 }
 
+func MakeDefined(num int, val float64) []float64 {
+	x := make([]float64, num)
+	for i, _ := range x {
+		x[i] = val
+	}
+
+	return x
+}
+
+func MakeUndefined(num int) []float64 {
+	return MakeDefined(num, UNDEFINED)
+}
+
 func (b *BlockData) Get() []float64 {
 	return b.out
 }
 
 func (b *BlockData) Put(x []float64) {
-	b.in = x
+	b.in = SafeCopy(len(x), x, len(x))
 }
 
 type InputBlockData struct {

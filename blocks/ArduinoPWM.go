@@ -5,20 +5,23 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
+	//"fmt"
 	"sync"
 	"time"
+	//"unsafe"
 )
 
 // you must compile the remoteEmbeddedSystems/arduino/duplexPWM/arduinoDuplexPWM.cpp file
 // and install it on the arduino
 
 const (
-	ARDUINOPWM_MAX_BYTES int   = 255 // largest numBytes in header
-	ARDUINOPWM_WRITEOP   uint8 = 1
-	ARDUINOPWM_READOP    uint8 = 2
-	ARDUINOPWM_SYNCBYTE1 byte  = 172
-	ARDUINOPWM_SYNCBYTE2 byte  = 86
+	ARDUINOPWM_MAX_BYTES    int   = 255 // largest numBytes in header
+	ARDUINOPWM_HEADER_BYTES int   = 12
+	ARDUINOPWM_TOTAL_BYTES  int   = ARDUINOPWM_MAX_BYTES + ARDUINOPWM_HEADER_BYTES // size of whole packet
+	ARDUINOPWM_WRITEOP      uint8 = 1
+	ARDUINOPWM_READOP       uint8 = 2
+	ARDUINOPWM_SYNCBYTE1    byte  = 172
+	ARDUINOPWM_SYNCBYTE2    byte  = 86
 )
 
 type ArduinoPWMHeader1 struct {
@@ -52,7 +55,7 @@ type ArduinoPWMPacket struct {
 
 // includes header
 func (p *ArduinoPWMPacket) Size() int {
-	numBytes := 2 + 5 + 5 + int(p.Header1.NumBytes)
+	numBytes := ARDUINOPWM_HEADER_BYTES + int(p.Header1.NumBytes)
 	return numBytes
 }
 
@@ -73,9 +76,17 @@ func arduinoPWMPacketToBytes(p ArduinoPWMPacket) []byte {
 
 func arduinoPWMBytesToPacket(b []byte) ArduinoPWMPacket {
 	var p ArduinoPWMPacket
-	buffer := bytes.NewBuffer(b)
+	bTmp := make([]byte, ARDUINOPWM_TOTAL_BYTES)
+	for i, v := range b {
+		bTmp[i] = v
+	}
+	//fmt.Println(bTmp)
+	buffer := bytes.NewReader(bTmp)
+
+	//binary.Read(buffer, binary.LittleEndian, &p)
 	binary.Read(buffer, binary.LittleEndian, &p)
 
+	//fmt.Println(p)
 	return p
 }
 
@@ -83,7 +94,7 @@ func arduinoPWMBytesToPacket(b []byte) ArduinoPWMPacket {
 func sendArduinoPWM(address string, p ArduinoPWMPacket) {
 	b := arduinoPWMPacketToBytes(p)
 
-	fmt.Println("sent b : ", b)
+	//fmt.Println("sent b : ", b)
 	SendSerialBytes(address, b)
 }
 
@@ -152,12 +163,13 @@ func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPW
 		int(p0.Header2.TimeOutCount) * 1000)
 	b1, err := SendReceiveSerialBytes(address, b0, p0.Size(), time.Now().Add(timeOutDuration))
 
-	fmt.Println("received ", b1)
+	//fmt.Println("received ", b1)
 
 	if err != nil {
 		logger.WriteEvent("SendReceiveArduinoPWM()", err)
 	}
 
+	//fmt.Println("received ", b1)
 	p1 := arduinoPWMBytesToPacket(b1)
 
 	if p1.Header1.ErrorCode != 0 {
@@ -165,6 +177,7 @@ func sendReceiveArduinoPWMPacket(address string, p0 ArduinoPWMPacket) (ArduinoPW
 		logger.WriteError("SendReceiveArduinoPWM()", err)
 	}
 
+	//fmt.Println(p1)
 	return p1, err
 }
 
