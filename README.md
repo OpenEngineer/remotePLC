@@ -25,6 +25,26 @@ remotePLC FILE_NAME [-c CMD_STRING] [-t DELTA_T] [-s LOG_INTERVAL]
 * `DELTA_T`       PLC cycle time
 * `LOG_INTERVAL`  save a record to the log every this many cycles
 
+## Installation
+Download this repository:
+```
+git clone https://github.com/christianschmitz/remotePLC remotePLC
+```
+Make sure you have the golang dev tools install, for example with aptitude:
+```
+sudo apt-get install golang
+```
+Go into the repository root directory, and run the compilation script:
+```
+cd ./remotePLC
+./make.sh
+```
+For statically linked compilation:
+```
+./make.sh -s
+```
+This script also copies the *remotePLC* binary to `$HOME/bin` if this directory exists. Proper installation to some `/usr/bin` directory is not yet included.
+
 # Examples 
 
 ## Example 1
@@ -141,34 +161,15 @@ Long configurations like this are a form of meta-programming, and bugs can quick
 
 Once a configuration has been debugged an underscore can be appended to the names of the *blocks*, this limits the amount of data being written. The underscores don't need to be added to every occurance of that blockname in the configuration though. The *lines* see regular names and underscores as identifiers of the same *block*, the underscore only acts as a hiding marker.
 
-## Installation
-Download this repository:
-```
-git clone https://github.com/christianschmitz/remotePLC remotePLC
-```
-Make sure you have the golang dev tools install, for example with aptitude:
-```
-sudo apt-get install golang
-```
-Go into the repository root directory, and run the compilation script:
-```
-cd ./remotePLC
-./make.sh
-```
-For statically linked compilation:
-```
-./make.sh -s
-```
-This script also copies the *remotePLC* binary to $HOME/bin if this directory exists. Proper installation to some /usr/bin directory is not yet included.
 
 # Internet of things:
 *remotePLC* is intended as a utility for easy home automation. Some of the devices that are supported:
 
-* Philips Hue lights. The user needs to specify an IP address and a user string (see Philips Hue API reference). A script is included in ./tutorials/philipsHue/ that can return these.
+* Philips Hue lights. The user needs to specify an IP address and a user string (see Philips Hue API reference). A script is included in `./tutorials/philipsHue/` that can return these.
 * Arduino PWM in and out (eg. cheap 433MHz remote switches)
 
 ## Remote Embedded Systems
-The ./remoteEmbeddedSystems/ folder contains source code intended for:
+The `./remoteEmbeddedSystems/` folder contains source code intended for:
 
 * Arduino: duplexPWM code (requires the avr and arduino dev tools)
 
@@ -201,4 +202,4 @@ For polling inputs with high latency, or any serving inputs, the polling/serving
 
 ## Todo
 * automatic documentation
-* compilation for MS Windows
+* support for MS Windows
