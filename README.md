@@ -10,6 +10,7 @@ There are four types of *blocks*:
 * stateless node blocks (math operators, bool operators...)
 * logic blocks (PID controls, time shift delays...)
 * output blocks (actuators, lights...)
+* stop blocks, stop the program on certain conditions (timeout, stability...)
 
 By configuring and connecting *blocks* in the right way you can automate your outputs based on your user and environment inputs.
 
@@ -72,10 +73,8 @@ x_ HttpInput 8080 3 | y_ FileOutput output.dat # no data is logged
 ## Example 2
 In this example three numbers from an http request are sent as a brightness, hue, and saturation value to three Philips Hue lights. In order not to interfere with the smart phone app, the three values are only sent after a new valid http request has been received:
 ```
-x HttpInput 8080 3
+x HttpInput 8080 3 | n Node
 
-UndefineLine x n
-n Node
 ForkLine n light1 light2 light3
 
 light1 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 1
@@ -83,10 +82,7 @@ light2 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 2
 light3 PhilipsHueOutput 192.168.1.6 T08t2C8GF9KEqXYRI8PBzb3M6vDjteT3hxdERW8z 3
 ```
 
-The `UndefineLine` takes the numbers from `HttpInput` and sends them to `n Node`. It then sets the output of `HttpInput` to `UNDEFINED`. The output of `HttpInput` in only updated with defined numbers after a valid new http request.
-
-The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing. This scheme assures that the lights are only switched when a new http request is received.
-
+Every time a client sends a valid http request, `HttpInput` propagates those numbers. In an idle state `HttpInput` propagates `UNDEFINED` numbers. The `PhilipsHueOutput` detects `UNDEFINED` numbers and does nothing. This way the lights are only switched when a new http request is received, thus upon a client action.
 ## Example 3
 This example combines an `HttpInput` with a 433MHz receiver. Both inputs are used to switch Philips Hue lights, and 433MHz lights.
 
@@ -98,7 +94,7 @@ SplitLine 1 in1 switch1 hue sat
 switch1_ Node
 
 # save the hue and sat state
-hue_ DefineLogic 0.1 #default values
+hue_ DefineLogic 0.1 #default values if upstream is UNDEFINED
 sat_ DefineLogic 0.1
 
 # handle the 433MHz input
@@ -163,22 +159,26 @@ For statically linked compilation:
 ```
 ./make.sh -s
 ```
-This script also copies the *remotePLC* binary to $HOME/bin if this directory exists.
+This script also copies the *remotePLC* binary to $HOME/bin if this directory exists. Proper installation to some /usr/bin directory is not yet included.
 
-# internet of things:
-* Philips Hue Bridge supported, user needs to specify an IP address and a user string (see Philips Hue API reference). I included a script in ./tutorials/philipsHue/ that can return these
-* Arduino serial (tutorial with 433MHz example eg. for cheap remote switches)
+# Internet of things:
+*remotePLC* is intended as a utility for easy home automation. Some of the devices that are supported:
+
+* Philips Hue lights. The user needs to specify an IP address and a user string (see Philips Hue API reference). A script is included in ./tutorials/philipsHue/ that can return these.
+* Arduino PWM in and out (eg. cheap 433MHz remote switches)
 
 ## Remote Embedded Systems
-the ./remoteEmbeddedSystems/ folder contains source code intended for eg:
-* the arduino duplexPWM code
+The ./remoteEmbeddedSystems/ folder contains source code intended for:
 
-# license
-GPL3
+* Arduino: duplexPWM code (requires the avr and arduino dev tools)
 
-# TODO:
-* automatic documentation
-* compilation for MS Windows
+# License
+GPLv3
+
+# Acknowledgements
+
+* Martin Ling and others: *libserialport*
+* mikepb: golang interface for *libserialport*
 
 # Developer's guide
 
@@ -198,3 +198,7 @@ A request to a server can also be considered an action, eg. change light state v
 Switches will be idle most of the time. For this *actionless* state, the downstream arrays should be set to `UNDEFINED`.
 
 For polling inputs with high latency, or any serving inputs, the polling/serving function should run in the background. This function should be launched upon construction of the input block and set to loop infinitely by itself. The `Update()` function should then poll the output of the polling/serving function via an intermediate array.
+
+## Todo
+* automatic documentation
+* compilation for MS Windows
