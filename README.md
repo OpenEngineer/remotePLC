@@ -4,11 +4,11 @@ This is a *soft* PLC program. It is configured through a text file.
 
 You specify *blocks* and connect them with *lines*. The *blocks* process arrays of 64 bit floating point numbers, and the *lines* pass these arrays between the *blocks*.
 
-There are four types of *blocks*:
+There are five types of *blocks*:
 
 * input blocks (remote sensors, switches...)
 * stateless node blocks (math operators, bool operators...)
-* logic blocks (PID controls, time shift delays...)
+* logic blocks, these have a state (PID controls, time shift delays...)
 * output blocks (actuators, lights...)
 * stop blocks, stop the program on certain conditions (timeout, stability...)
 
