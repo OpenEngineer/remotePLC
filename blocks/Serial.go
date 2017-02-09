@@ -233,7 +233,7 @@ func SendReceiveSerialBytes(address string, bytes []byte, numBytes int, deadline
 
 		_, errRead := p.p.Read(buffer)
 		if errRead != nil {
-			logger.WriteEvent("SendReceiveSerialBytes(), read", errRead)
+			logger.WriteError("SendReceiveSerialBytes(), read", errRead)
 			return []byte{}, errRead
 		}
 

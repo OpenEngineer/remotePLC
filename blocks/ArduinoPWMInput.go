@@ -5,6 +5,7 @@ import (
 	"../parser/"
 	//"strconv"
 	//"fmt"
+	"time"
 )
 
 // for more info see the ArduinoPWM.go file
@@ -83,7 +84,10 @@ func ArduinoPWMInputConstructor(name string, words []string) Block {
 
 	// loop the polling infinitely in the background
 	go func() {
+		period, _ := time.ParseDuration("1s")
+		ticker := time.NewTicker(period)
 		for {
+			<-ticker.C
 			b.Poll()
 		}
 	}()
