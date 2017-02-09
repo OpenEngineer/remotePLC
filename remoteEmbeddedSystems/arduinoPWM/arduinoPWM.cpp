@@ -6,7 +6,7 @@
 #include "serialReadWrite.h"
 
 // parameters:
-#define OUTPUT_PIN 8 
+#define OUTPUT_PIN 7
 #define SERIAL_BITRATE 9600
 
 arduinoPWMPacket handleMessage(arduinoPWMPacket question) {
