@@ -12,7 +12,7 @@ There are five types of *blocks*:
 * output blocks (actuators, lights...)
 * stop blocks, stop the program on certain conditions (timeout, stability...)
 
-By configuring and connecting *blocks* in the right way you can automate your outputs based on your user and environment inputs.
+By configuring and connecting *blocks* in the right way you can automate your outputs based on your user and environment inputs. A web-based GUI is available through 127.0.0.1:8888.
 
 ## Usage
 From your shell:
@@ -200,6 +200,8 @@ Switches will be idle most of the time. For this *actionless* state, the downstr
 
 For polling inputs with high latency, or any serving inputs, the polling/serving function should run in the background. This function should be launched upon construction of the input block and set to loop infinitely by itself. The `Update()` function should then poll the output of the polling/serving function via an intermediate array.
 
-## Todo
+## Todo and bugs
+* print newline to log when only date and time (thus no vars)
 * automatic documentation
 * support for MS Windows
+

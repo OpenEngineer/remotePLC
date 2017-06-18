@@ -2,6 +2,7 @@ package main
 
 import (
 	"./graph/"
+	"./gui/"
 	"./logger/"
 	"./parser/"
 	"errors"
@@ -27,6 +28,8 @@ func main() {
 
 	g := graph.ConstructGraph(blockTable, lineTable,
 		[]string{"inputs"}, []string{"logic"}, []string{"outputs"})
+
+	gui.LaunchGui()
 
 	logger.EventMode = logger.WARNING
 
